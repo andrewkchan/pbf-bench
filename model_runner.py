@@ -7,6 +7,8 @@ import os
 import time
 import base64
 import asyncio
+import tempfile
+import atexit
 from typing import Dict, List, Optional, Any
 from abc import ABC, abstractmethod
 import yaml
@@ -19,6 +21,23 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Track temporary files for cleanup
+_temp_files = []
+
+def _cleanup_temp_files():
+    """Clean up temporary files on exit"""
+    for temp_file in _temp_files:
+        try:
+            if os.path.exists(temp_file):
+                os.unlink(temp_file)
+                logger.debug(f"Cleaned up temporary file: {temp_file}")
+        except Exception as e:
+            logger.warning(f"Failed to clean up temporary file {temp_file}: {e}")
+    _temp_files.clear()
+
+# Register cleanup function
+atexit.register(_cleanup_temp_files)
 
 @dataclass
 class ModelResponse:
@@ -47,6 +66,40 @@ class ModelProvider(ABC):
         """Encode image to base64"""
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
+    
+    def _ensure_compatible_format(self, image_path: str) -> str:
+        """Convert image to compatible format if needed (e.g., GIF to PNG).
+        This ensures consistency across all providers."""
+        if not image_path.lower().endswith('.gif'):
+            return image_path
+        
+        try:
+            from PIL import Image
+            
+            # Create a temporary PNG file
+            temp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+            temp_png_path = temp_png.name
+            temp_png.close()
+            
+            # Convert GIF to PNG
+            with Image.open(image_path) as img:
+                # Get the first frame if it's an animated GIF
+                if hasattr(img, 'n_frames') and img.n_frames > 1:
+                    img.seek(0)
+                # Convert to RGB if necessary (some GIFs might be in palette mode)
+                if img.mode not in ('RGB', 'RGBA'):
+                    img = img.convert('RGB')
+                img.save(temp_png_path, 'PNG')
+            
+            # Track for cleanup
+            _temp_files.append(temp_png_path)
+            
+            logger.info(f"Converted GIF to PNG: {image_path} -> {temp_png_path}")
+            return temp_png_path
+            
+        except Exception as e:
+            logger.warning(f"Failed to convert GIF to PNG: {e}. Using original file.")
+            return image_path
 
 class AnthropicProvider(ModelProvider):
     """Provider for Anthropic Claude models"""
@@ -72,9 +125,12 @@ class AnthropicProvider(ModelProvider):
         timestamp = datetime.utcnow().isoformat()
         
         try:
+            # Convert GIF to PNG if needed for compatibility
+            compatible_path = self._ensure_compatible_format(image_path)
+            
             # Read image and determine media type
-            image_data = self.encode_image(image_path)
-            media_type = "image/png" if image_path.endswith('.png') else "image/jpeg"
+            image_data = self.encode_image(compatible_path)
+            media_type = "image/png" if compatible_path.endswith('.png') else "image/jpeg"
             
             # Create message with image
             message = self.client.messages.create(
@@ -146,8 +202,11 @@ class GoogleProvider(ModelProvider):
         timestamp = datetime.utcnow().isoformat()
         
         try:
+            # Convert GIF to PNG if needed for compatibility
+            compatible_path = self._ensure_compatible_format(image_path)
+            
             import PIL.Image
-            image = PIL.Image.open(image_path)
+            image = PIL.Image.open(compatible_path)
             
             # Generate content
             response = self.model.generate_content(
@@ -212,8 +271,11 @@ class OpenAIProvider(ModelProvider):
         timestamp = datetime.utcnow().isoformat()
         
         try:
+            # Convert GIF to PNG if needed for consistency
+            compatible_path = self._ensure_compatible_format(image_path)
+            
             # Encode image
-            image_data = self.encode_image(image_path)
+            image_data = self.encode_image(compatible_path)
             
             # Create completion
             response = self.client.chat.completions.create(

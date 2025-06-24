@@ -178,7 +178,27 @@ def complete():
 @app.route('/pbf_comics/<filename>')
 def serve_comic_image(filename):
     """Serve comic images"""
-    return send_from_directory('pbf_comics', filename)
+    # Check if file exists with different extensions
+    base_path = 'pbf_comics'
+    
+    # First try the requested filename
+    if os.path.exists(os.path.join(base_path, filename)):
+        return send_from_directory(base_path, filename)
+    
+    # If it's a GIF request, also try PNG (in case it was converted)
+    if filename.lower().endswith('.gif'):
+        png_filename = filename[:-4] + '.png'
+        if os.path.exists(os.path.join(base_path, png_filename)):
+            return send_from_directory(base_path, png_filename)
+    
+    # If it's a PNG request, also try GIF (original might be GIF)
+    if filename.lower().endswith('.png'):
+        gif_filename = filename[:-4] + '.gif'
+        if os.path.exists(os.path.join(base_path, gif_filename)):
+            return send_from_directory(base_path, gif_filename)
+    
+    # File not found
+    return "Image not found", 404
 
 if __name__ == '__main__':
     # Create templates directory if it doesn't exist
