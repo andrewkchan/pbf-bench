@@ -5,7 +5,7 @@ Provides a UI to review AI-generated explanations and select the best one.
 """
 import os
 import json
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -163,6 +163,11 @@ def get_progress():
 def complete():
     """Completion page"""
     return render_template('complete.html', progress=labeling_app.get_progress())
+
+@app.route('/pbf_comics/<filename>')
+def serve_comic_image(filename):
+    """Serve comic images"""
+    return send_from_directory('pbf_comics', filename)
 
 if __name__ == '__main__':
     # Create templates directory if it doesn't exist
