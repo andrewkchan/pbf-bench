@@ -36,7 +36,7 @@ models:
     temperature: 0.7
 
 prompts:
-  explain_comic: "Explain this comic in 2-3 sentences. Describe what's happening and explain the humor or message."
+  explain_comic: "Explain this comic. Describe what's happening and explain the humor or message."
   
 # Models to use for generating ground truth candidates
 phase1_models: [claude-3-5-sonnet, gemini-2.0-flash, gpt-4o]
