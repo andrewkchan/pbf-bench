@@ -147,10 +147,21 @@ function skipComic() {
 }
 
 // Pre-select if already labeled
-{% if comic_data.selected %}
+{% if comic_data.is_custom is defined %}
+// New format
+{% if comic_data.is_custom %}
+document.querySelector('input[value="custom"]').checked = true;
+document.getElementById('customExplanation').value = '{{ comic_data.explanation|replace("'", "\\'") }}';
+selectedModel = 'custom';
+{% else %}
+selectExplanation('{{ comic_data.source_model }}');
+{% endif %}
+document.getElementById('submitBtn').disabled = false;
+{% elif comic_data.selected %}
+// Old format (backward compatibility)
 {% if comic_data.selected == 'custom' %}
 document.querySelector('input[value="custom"]').checked = true;
-document.getElementById('customExplanation').value = '{{ comic_data.custom_explanation }}';
+document.getElementById('customExplanation').value = '{{ comic_data.custom_explanation|replace("'", "\\'") }}';
 selectedModel = 'custom';
 {% else %}
 selectExplanation('{{ comic_data.selected }}');

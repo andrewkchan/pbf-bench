@@ -57,9 +57,20 @@ class LabelingApp:
         if comic_id not in self.explanations:
             return False
         
+        # Get the actual explanation text
+        if selected == 'custom':
+            explanation_text = custom_explanation
+            source_model = None
+        else:
+            # Get the explanation from the selected model
+            explanations = self.explanations[comic_id].get('explanations', {})
+            explanation_text = explanations.get(selected, '')
+            source_model = selected
+        
         self.ground_truth[comic_id] = {
-            'selected': selected,
-            'custom_explanation': custom_explanation,
+            'explanation': explanation_text,
+            'source_model': source_model,  # None if custom, model name if selected
+            'is_custom': selected == 'custom',
             'labeled_by': 'human',
             'labeled_at': datetime.utcnow().isoformat()
         }
