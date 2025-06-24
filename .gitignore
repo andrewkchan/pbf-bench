@@ -2,3 +2,5 @@
 .env
 sample.html
 env/
+
+__pycache__/
