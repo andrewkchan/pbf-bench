@@ -54,9 +54,18 @@ class AnthropicProvider(ModelProvider):
         super().__init__(config)
         try:
             import anthropic
-            self.client = anthropic.Anthropic(api_key=self.api_key)
+            logger.info(f"Anthropic version: {anthropic.__version__}")
+            # Initialize with explicit parameters only
+            self.client = anthropic.Anthropic(
+                api_key=self.api_key,
+                max_retries=0  # We handle retries ourselves
+            )
+            logger.info("✅ Anthropic client initialized successfully")
         except ImportError:
             raise ImportError("Please install anthropic: pip install anthropic")
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic client: {e}")
+            raise
     
     async def generate(self, prompt: str, image_path: str) -> ModelResponse:
         start_time = time.time()
@@ -122,10 +131,15 @@ class GoogleProvider(ModelProvider):
         super().__init__(config)
         try:
             import google.generativeai as genai
+            logger.info(f"Google Generative AI version: {genai.__version__}")
             genai.configure(api_key=self.api_key)
             self.model = genai.GenerativeModel(config['model'])
+            logger.info("✅ Google Gemini client initialized successfully")
         except ImportError:
             raise ImportError("Please install google-generativeai: pip install google-generativeai")
+        except Exception as e:
+            logger.error(f"Failed to initialize Google client: {e}")
+            raise
     
     async def generate(self, prompt: str, image_path: str) -> ModelResponse:
         start_time = time.time()
@@ -180,9 +194,18 @@ class OpenAIProvider(ModelProvider):
         super().__init__(config)
         try:
             import openai
-            self.client = openai.OpenAI(api_key=self.api_key)
+            logger.info(f"OpenAI version: {openai.__version__}")
+            # Initialize with explicit parameters only
+            self.client = openai.OpenAI(
+                api_key=self.api_key,
+                max_retries=0  # We handle retries ourselves
+            )
+            logger.info("✅ OpenAI client initialized successfully")
         except ImportError:
             raise ImportError("Please install openai: pip install openai")
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenAI client: {e}")
+            raise
     
     async def generate(self, prompt: str, image_path: str) -> ModelResponse:
         start_time = time.time()
@@ -259,21 +282,44 @@ class ModelRunner:
     
     def _init_providers(self):
         """Initialize provider instances"""
+        required_providers = set()
+        
+        # Determine which providers are actually needed
         for model_id, model_config in self.config['models'].items():
-            provider_name = model_config['provider']
+            required_providers.add(model_config['provider'])
+        
+        failed_providers = []
+        
+        for provider_name in required_providers:
             if provider_name not in self.providers:
                 provider_class = self.PROVIDER_CLASSES.get(provider_name)
                 if not provider_class:
-                    logger.warning(f"Unknown provider: {provider_name}")
+                    failed_providers.append(f"Unknown provider: {provider_name}")
                     continue
                 
                 try:
+                    # Find a model config for this provider
+                    model_config = None
+                    for _, config in self.config['models'].items():
+                        if config['provider'] == provider_name:
+                            model_config = config
+                            break
+                    
                     self.providers[provider_name] = provider_class(model_config)
                     # Initialize rate limiter
                     rate_limit = self.config['rate_limits'].get(provider_name, 60)
                     self.rate_limiters[provider_name] = RateLimiter(rate_limit)
+                    logger.info(f"✅ Initialized provider: {provider_name}")
                 except Exception as e:
-                    logger.error(f"Failed to initialize provider {provider_name}: {e}")
+                    error_msg = f"Failed to initialize provider {provider_name}: {e}"
+                    logger.error(error_msg)
+                    failed_providers.append(error_msg)
+        
+        if failed_providers:
+            logger.error("❌ Failed to initialize required providers:")
+            for error in failed_providers:
+                logger.error(f"  - {error}")
+            raise RuntimeError(f"Provider initialization failed. Please check your API keys and dependencies.")
     
     async def run_model(self, model_id: str, prompt: str, image_path: str) -> ModelResponse:
         """Run a specific model with rate limiting and retries"""
