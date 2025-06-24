@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <h1>PBF Comics Ground Truth Labeling</h1>
+    <div>
+        <strong>Comic {{ current_index }} of {{ total_comics }}</strong>
+        {% if comic_data.comic_title %}
+        - "{{ comic_data.comic_title }}"
+        {% endif %}
+    </div>
+    
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress.percentage }}%"></div>
+    </div>
+    <div>Progress: {{ progress.labeled }}/{{ progress.total }} ({{ "%.1f"|format(progress.percentage) }}%)</div>
+</div>
+
+<div class="comic-display">
+    <img src="{{ comic_data.image_path }}" alt="Comic" class="comic-image">
+    
+    {% if comic_data.alt_text %}
+    <div class="metadata">
+        <strong>Alt text:</strong> {{ comic_data.alt_text }}
+    </div>
+    {% endif %}
+</div>
+
+<h3>Select the best explanation:</h3>
+
+<div class="explanations-grid">
+    {% for model, explanation in comic_data.explanations.items() %}
+    <div class="explanation-card" data-model="{{ model }}" onclick="selectExplanation('{{ model }}')">
+        <div class="explanation-header">{{ model.replace('-', ' ').title() }}</div>
+        <div class="explanation-text">{{ explanation }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="custom-section">
+    <h4>Or write a custom explanation:</h4>
+    <textarea class="custom-textarea" id="customExplanation" placeholder="Write your own explanation if none of the above are satisfactory..."></textarea>
+    <label>
+        <input type="radio" name="selection" value="custom" onchange="selectCustom()"> 
+        Use custom explanation
+    </label>
+</div>
+
+<div class="button-group">
+    <button class="btn btn-secondary" onclick="skipComic()">Skip for now</button>
+    <button class="btn btn-primary" onclick="submitLabel()" id="submitBtn" disabled>Submit & Next</button>
+</div>
+
+<div class="metadata">
+    <strong>Keyboard shortcuts:</strong> Ctrl+1/2/3 to select explanations, Ctrl+Enter to submit
+</div>
+
+<script>
+let selectedModel = null;
+const comicId = '{{ comic_id }}';
+
+function selectExplanation(model) {
+    // Clear all selections
+    document.querySelectorAll('.explanation-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector('input[value="custom"]').checked = false;
+    
+    // Select the clicked explanation
+    document.querySelector(`[data-model="${model}"]`).classList.add('selected');
+    selectedModel = model;
+    
+    // Enable submit button
+    document.getElementById('submitBtn').disabled = false;
+}
+
+function selectCustom() {
+    // Clear model selections
+    document.querySelectorAll('.explanation-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    selectedModel = 'custom';
+    document.getElementById('submitBtn').disabled = false;
+}
+
+function submitLabel() {
+    if (!selectedModel) {
+        alert('Please select an explanation first');
+        return;
+    }
+    
+    const customExplanation = document.getElementById('customExplanation').value;
+    
+    if (selectedModel === 'custom' && !customExplanation.trim()) {
+        alert('Please write a custom explanation');
+        return;
+    }
+    
+    // Disable submit button to prevent double-submission
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerText = 'Saving...';
+    
+    // Submit the label
+    fetch('/api/save_label', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comic_id: comicId,
+            selected: selectedModel,
+            custom_explanation: customExplanation
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.next_comic) {
+                // Go to next comic
+                window.location.href = '/?comic_id=' + data.next_comic;
+            } else {
+                // All done!
+                window.location.href = '/complete';
+            }
+        } else {
+            alert('Error saving label: ' + data.error);
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').innerText = 'Submit & Next';
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').innerText = 'Submit & Next';
+    });
+}
+
+function skipComic() {
+    // Go to next unlabeled comic without saving
+    fetch('/api/progress')
+    .then(response => response.json())
+    .then(data => {
+        // Simple way to get next comic - reload page
+        window.location.reload();
+    });
+}
+
+// Pre-select if already labeled
+{% if comic_data.selected %}
+{% if comic_data.selected == 'custom' %}
+document.querySelector('input[value="custom"]').checked = true;
+document.getElementById('customExplanation').value = '{{ comic_data.custom_explanation }}';
+selectedModel = 'custom';
+{% else %}
+selectExplanation('{{ comic_data.selected }}');
+{% endif %}
+document.getElementById('submitBtn').disabled = false;
+{% endif %}
+</script>
+
+{% endblock %}

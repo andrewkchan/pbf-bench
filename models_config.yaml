@@ -1,0 +1,60 @@
+# Model configuration for PBF Comics Benchmark
+models:
+  claude-3-opus:
+    provider: anthropic
+    model: claude-3-opus-20240229
+    api_key_env: ANTHROPIC_API_KEY
+    max_tokens: 1000
+    temperature: 0.7
+    
+  claude-3-5-sonnet:
+    provider: anthropic
+    model: claude-3-5-sonnet-20241022
+    api_key_env: ANTHROPIC_API_KEY
+    max_tokens: 1000
+    temperature: 0.7
+    
+  gemini-2.0-flash:
+    provider: google
+    model: gemini-2.0-flash-exp
+    api_key_env: GOOGLE_API_KEY
+    max_tokens: 1000
+    temperature: 0.7
+    
+  gpt-4o:
+    provider: openai
+    model: gpt-4o
+    api_key_env: OPENAI_API_KEY
+    max_tokens: 1000
+    temperature: 0.7
+    
+  gpt-4o-mini:
+    provider: openai
+    model: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+    max_tokens: 1000
+    temperature: 0.7
+
+prompts:
+  explain_comic: "Explain this comic in 2-3 sentences. Describe what's happening and explain the humor or message."
+  
+# Models to use for generating ground truth candidates
+phase1_models: [claude-3-5-sonnet, gemini-2.0-flash, gpt-4o]
+
+# Models to evaluate in the benchmark
+benchmark_models: [claude-3-opus, claude-3-5-sonnet, gemini-2.0-flash, gpt-4o, gpt-4o-mini]
+
+# Model to use as judge
+judge_model: claude-3-opus
+
+# Rate limiting settings (requests per minute)
+rate_limits:
+  anthropic: 50
+  google: 60
+  openai: 60
+  
+# Retry settings
+retry:
+  max_attempts: 3
+  initial_delay: 1
+  backoff_factor: 2
