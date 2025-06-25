@@ -472,7 +472,6 @@ def create_leaderboard_html(models, comic_scores, metadata):
                             <th class="rank">Rank</th>
                             <th class="model-name">Model</th>
                             <th class="score">Avg</th>
-                            <th class="score">Median</th>
                             <th class="score">Best</th>
                             <th class="score">Worst</th>
                         </tr>
@@ -604,7 +603,6 @@ def create_leaderboard_html(models, comic_scores, metadata):
                         <div class="provider-badge ${{model.provider}}">${{model.provider}}</div>
                     </td>
                     <td class="score ${{getScoreClass(model.avgScore)}}">${{model.avgScore.toFixed(2)}}</td>
-                    <td class="score ${{getScoreClass(model.medianScore)}}">${{model.medianScore.toFixed(2)}}</td>
                     <td class="score ${{getScoreClass(model.maxScore)}}">${{model.maxScore.toFixed(1)}}</td>
                     <td class="score ${{getScoreClass(model.minScore)}}">${{model.minScore.toFixed(1)}}</td>
                 </tr>
