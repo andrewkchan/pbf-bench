@@ -120,16 +120,28 @@ def create_leaderboard_html(models, comic_scores, metadata):
         comic_title = comic_meta.get('comic_title', comic_id.replace('.png', '').replace('PBF-', ''))
         comic_url = comic_meta.get('page_url', '#')
         
-        row_html = f'<tr><td class="comic-name"><a href="{comic_url}" target="_blank">{comic_title}</a></td>'
+        row_html = f'<tr data-comic="{comic_title}"><td class="comic-name"><a href="{comic_url}" target="_blank">{comic_title}</a></td>'
+        
+        # Calculate average score for this comic
+        scores_for_comic = []
         
         # Add scores for each model
         for model in models:
             score = comic_scores[comic_id].get(model['model_id'])
             if score is not None:
+                scores_for_comic.append(score)
                 score_class = 'high' if score >= 7 else 'medium' if score >= 5 else 'low'
-                row_html += f'<td class="score {score_class}">{score:.1f}</td>'
+                row_html += f'<td class="score {score_class}" data-score="{score}">{score:.1f}</td>'
             else:
-                row_html += '<td class="score">-</td>'
+                row_html += '<td class="score" data-score="-1">-</td>'
+        
+        # Add average score
+        if scores_for_comic:
+            avg_score = sum(scores_for_comic) / len(scores_for_comic)
+            avg_class = 'high' if avg_score >= 7 else 'medium' if avg_score >= 5 else 'low'
+            row_html += f'<td class="score avg-score {avg_class}" data-score="{avg_score}">{avg_score:.2f}</td>'
+        else:
+            row_html += '<td class="score avg-score" data-score="-1">-</td>'
         
         row_html += '</tr>'
         comic_table_rows.append(row_html)
@@ -137,7 +149,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
     comic_table_html = '\n'.join(comic_table_rows)
     
     # Generate model header cells
-    model_headers = ''.join([f'<th class="model-header">{model["model"]}</th>' for model in models])
+    model_headers = ''.join([f'<th class="model-header sortable" data-sort="model-{i}">{model["model"]}</th>' for i, model in enumerate(models)])
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -253,6 +265,25 @@ def create_leaderboard_html(models, comic_scores, metadata):
             padding: 10px 2px;
         }}
         
+        .avg-header {{
+            font-weight: 700;
+            background: linear-gradient(135deg, #2c3e50, #34495e) !important;
+        }}
+        
+        .avg-score {{
+            font-weight: 700;
+            border-left: 2px solid #ddd;
+        }}
+        
+        .sortable {{
+            cursor: pointer;
+            user-select: none;
+        }}
+        
+        .sortable:hover {{
+            background: linear-gradient(135deg, #2980b9, #3498db) !important;
+        }}
+        
         .rank {{ font-weight: 700; color: #2c3e50; width: 50px; }}
         .model-name {{ font-weight: 600; color: #2c3e50; min-width: 150px; }}
         .score {{ font-weight: 600; text-align: center; width: 60px; }}
@@ -333,8 +364,9 @@ def create_leaderboard_html(models, comic_scores, metadata):
                 <table class="comic-table">
                     <thead>
                         <tr>
-                            <th class="comic-name">Comic</th>
+                            <th class="comic-name sortable" data-sort="comic">Comic ↕</th>
                             {model_headers}
+                            <th class="avg-header sortable" data-sort="average">Average ↕</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -353,9 +385,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
 
         <div class="footer">
             <p>📈 Last updated: <span id="last-updated"></span></p>
-            <p>🔗 <a href="https://github.com/yourusername/pbf-bench" target="_blank">View on GitHub</a> | 
-               📊 <a href="../benchmark_results.csv" target="_blank">Download CSV</a> | 
-               📄 <a href="../benchmark_details.json" target="_blank">Detailed Results</a></p>
+            <p>🔗 <a href="https://github.com/andrewkchan/pbf-bench" target="_blank">View on GitHub</a></p>
         </div>
     </div>
 
@@ -439,7 +469,64 @@ def create_leaderboard_html(models, comic_scores, metadata):
             populateStats();
             populateTable();
             updateLastUpdated();
+            initializeSorting();
         }});
+        
+        function initializeSorting() {{
+            const table = document.querySelector('.comic-table');
+            const tbody = table.querySelector('tbody');
+            const headers = table.querySelectorAll('.sortable');
+            let currentSort = {{ column: null, ascending: true }};
+            
+            headers.forEach(header => {{
+                header.addEventListener('click', () => {{
+                    const sortType = header.dataset.sort;
+                    const ascending = currentSort.column === sortType ? !currentSort.ascending : true;
+                    currentSort = {{ column: sortType, ascending }};
+                    
+                    // Update header text to show sort direction
+                    headers.forEach(h => {{
+                        const text = h.textContent.replace(' ↑', '').replace(' ↓', '').replace(' ↕', '');
+                        if (h === header) {{
+                            h.textContent = text + (ascending ? ' ↑' : ' ↓');
+                        }} else {{
+                            h.textContent = text + ' ↕';
+                        }}
+                    }});
+                    
+                    // Sort the rows
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+                    rows.sort((a, b) => {{
+                        let aVal, bVal;
+                        
+                        if (sortType === 'comic') {{
+                            aVal = a.dataset.comic.toLowerCase();
+                            bVal = b.dataset.comic.toLowerCase();
+                        }} else if (sortType === 'average') {{
+                            aVal = parseFloat(a.querySelector('.avg-score').dataset.score);
+                            bVal = parseFloat(b.querySelector('.avg-score').dataset.score);
+                        }} else if (sortType.startsWith('model-')) {{
+                            const modelIndex = parseInt(sortType.split('-')[1]);
+                            aVal = parseFloat(a.querySelectorAll('.score:not(.avg-score)')[modelIndex].dataset.score);
+                            bVal = parseFloat(b.querySelectorAll('.score:not(.avg-score)')[modelIndex].dataset.score);
+                        }}
+                        
+                        // Handle missing values
+                        if (aVal === -1) aVal = ascending ? Infinity : -Infinity;
+                        if (bVal === -1) bVal = ascending ? Infinity : -Infinity;
+                        
+                        if (typeof aVal === 'string') {{
+                            return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                        }} else {{
+                            return ascending ? aVal - bVal : bVal - aVal;
+                        }}
+                    }});
+                    
+                    // Re-append sorted rows
+                    rows.forEach(row => tbody.appendChild(row));
+                }});
+            }});
+        }}
     </script>
 </body>
 </html>"""
