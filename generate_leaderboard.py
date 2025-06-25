@@ -16,8 +16,15 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
         raise FileNotFoundError(f"Benchmark results file not found: {csv_file}")
     
     models = []
+    comic_scores = {}  # Store per-comic scores
+    
     with open(csv_file, 'r') as f:
         reader = csv.DictReader(f)
+        headers = reader.fieldnames
+        
+        # Extract comic columns
+        comic_columns = [col for col in headers if col.startswith('comic_')]
+        
         for row in reader:
             if not row['model_name']:  # Skip empty rows
                 continue
@@ -60,42 +67,78 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
                 'totalComics': total_comics,
                 'timestamp': row.get('timestamp', '')
             })
+            
+            # Store individual comic scores
+            for comic_col in comic_columns:
+                comic_id = comic_col.replace('comic_', '')
+                if comic_id not in comic_scores:
+                    comic_scores[comic_id] = {}
+                
+                try:
+                    score = float(row[comic_col])
+                    comic_scores[comic_id][model_name] = score
+                except (ValueError, TypeError):
+                    comic_scores[comic_id][model_name] = None
     
     # Sort by average score (descending) and add ranks
     models.sort(key=lambda x: x['avgScore'], reverse=True)
     for i, model in enumerate(models, 1):
         model['rank'] = i
     
-    return models
+    return models, comic_scores
 
-def create_leaderboard_html(models):
+def load_metadata(metadata_file="pbf_comics_metadata.json"):
+    """Load comic metadata for URLs"""
+    if not os.path.exists(metadata_file):
+        return {}
+    
+    with open(metadata_file, 'r') as f:
+        metadata_list = json.load(f)
+    
+    # Convert to dict keyed by filename
+    metadata_dict = {}
+    for comic in metadata_list:
+        metadata_dict[comic['filename']] = comic
+    
+    return metadata_dict
+
+def create_leaderboard_html(models, comic_scores, metadata):
     """Create the complete HTML content"""
     # Convert models data to JSON for JavaScript
     models_json = json.dumps(models, indent=2)
     
     total_comics = models[0]['totalComics'] if models else 0
     
-    # Read the template file
-    template_path = "docs/index.html"
-    if os.path.exists(template_path):
-        with open(template_path, 'r') as f:
-            html_content = f.read()
-        
-        # Replace the benchmark data in the JavaScript
-        start_marker = "const benchmarkData = ["
-        end_marker = "];"
-        
-        start_idx = html_content.find(start_marker)
-        if start_idx != -1:
-            end_idx = html_content.find(end_marker, start_idx)
-            if end_idx != -1:
-                # Replace the data
-                new_content = (html_content[:start_idx] + 
-                             f"const benchmarkData = {models_json};" + 
-                             html_content[end_idx + len(end_marker):])
-                return new_content
+    # Sort comics by filename
+    sorted_comics = sorted(comic_scores.keys())
     
-    # If template doesn't exist or parsing failed, create from scratch
+    # Create comic scores table HTML
+    comic_table_rows = []
+    for comic_id in sorted_comics:
+        # Get metadata for this comic
+        comic_meta = metadata.get(comic_id, {})
+        comic_title = comic_meta.get('comic_title', comic_id.replace('.png', '').replace('PBF-', ''))
+        comic_url = comic_meta.get('page_url', '#')
+        
+        row_html = f'<tr><td class="comic-name"><a href="{comic_url}" target="_blank">{comic_title}</a></td>'
+        
+        # Add scores for each model
+        for model in models:
+            score = comic_scores[comic_id].get(model['model_id'])
+            if score is not None:
+                score_class = 'high' if score >= 7 else 'medium' if score >= 5 else 'low'
+                row_html += f'<td class="score {score_class}">{score:.1f}</td>'
+            else:
+                row_html += '<td class="score">-</td>'
+        
+        row_html += '</tr>'
+        comic_table_rows.append(row_html)
+    
+    comic_table_html = '\n'.join(comic_table_rows)
+    
+    # Generate model header cells
+    model_headers = ''.join([f'<th class="model-header">{model["model"]}</th>' for model in models])
+    
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,7 +155,7 @@ def create_leaderboard_html(models):
             padding: 20px;
         }}
         .container {{
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -122,101 +165,161 @@ def create_leaderboard_html(models):
         .header {{
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
-            padding: 40px 30px;
+            padding: 30px 20px;
             text-align: center;
         }}
-        .header h1 {{ font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; }}
-        .header p {{ font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }}
+        .header h1 {{ font-size: 2rem; margin-bottom: 10px; font-weight: 700; }}
+        .header p {{ font-size: 1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }}
+        
+        /* Compact stats */
         .stats {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
             background: #f8f9fa;
         }}
         .stat-card {{
             background: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }}
-        .stat-number {{ font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 5px; }}
-        .stat-label {{ color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }}
-        .leaderboard {{ padding: 0 30px 30px; }}
-        .leaderboard h2 {{ font-size: 1.8rem; margin-bottom: 20px; color: #2c3e50; text-align: center; }}
-        .table-container {{ overflow-x: auto; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
-        table {{ width: 100%; border-collapse: collapse; background: white; }}
-        th {{
+        .stat-number {{ font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin-bottom: 3px; }}
+        .stat-label {{ color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }}
+        
+        /* Compact leaderboard */
+        .leaderboard {{ padding: 20px; }}
+        .leaderboard h2 {{ font-size: 1.4rem; margin-bottom: 15px; color: #2c3e50; text-align: center; }}
+        .leaderboard-table-container {{ 
+            overflow-x: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }}
+        .leaderboard-table {{ width: 100%; border-collapse: collapse; background: white; font-size: 0.9rem; }}
+        .leaderboard-table th {{
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
-            padding: 15px 12px;
+            padding: 10px 8px;
             text-align: left;
+            font-weight: 600;
+        }}
+        .leaderboard-table td {{ padding: 8px; border-bottom: 1px solid #eee; }}
+        .leaderboard-table tr:hover {{ background: #f8f9fa; }}
+        
+        /* Comic scores table */
+        .comic-scores {{ padding: 0 20px 20px; }}
+        .comic-scores h2 {{ font-size: 1.4rem; margin-bottom: 15px; color: #2c3e50; text-align: center; }}
+        .comic-table-container {{ 
+            overflow-x: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }}
+        .comic-table {{ width: 100%; border-collapse: collapse; background: white; font-size: 0.85rem; }}
+        .comic-table th {{
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px 6px;
             font-weight: 600;
             position: sticky;
             top: 0;
             z-index: 10;
         }}
-        td {{ padding: 12px; border-bottom: 1px solid #eee; }}
-        tr:hover {{ background: #f8f9fa; }}
-        .rank {{ font-weight: 700; color: #2c3e50; width: 60px; }}
-        .model-name {{ font-weight: 600; color: #2c3e50; min-width: 180px; }}
-        .score {{ font-weight: 600; text-align: center; width: 80px; }}
-        .score.high {{ color: #27ae60; }}
-        .score.medium {{ color: #f39c12; }}
-        .score.low {{ color: #e74c3c; }}
+        .comic-table td {{ padding: 6px; border-bottom: 1px solid #eee; text-align: center; }}
+        .comic-table tr:hover {{ background: #f8f9fa; }}
+        
+        .comic-name {{ 
+            text-align: left !important; 
+            font-weight: 500; 
+            min-width: 200px;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 5;
+        }}
+        .comic-name a {{ color: #2c3e50; text-decoration: none; }}
+        .comic-name a:hover {{ color: #3498db; text-decoration: underline; }}
+        
+        .model-header {{
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            min-width: 40px;
+            max-width: 40px;
+            height: 120px;
+            padding: 10px 2px;
+        }}
+        
+        .rank {{ font-weight: 700; color: #2c3e50; width: 50px; }}
+        .model-name {{ font-weight: 600; color: #2c3e50; min-width: 150px; }}
+        .score {{ font-weight: 600; text-align: center; width: 60px; }}
+        .score.high {{ background-color: #d4edda; color: #155724; }}
+        .score.medium {{ background-color: #fff3cd; color: #856404; }}
+        .score.low {{ background-color: #f8d7da; color: #721c24; }}
+        
         .provider-badge {{
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
         }}
         .anthropic {{ background: #e8f5e8; color: #2d5a2d; }}
         .google {{ background: #e3f2fd; color: #1565c0; }}
         .openai {{ background: #fff3e0; color: #e65100; }}
+        
         .methodology {{
-            padding: 30px;
+            padding: 20px;
             background: #f8f9fa;
             border-top: 1px solid #eee;
+            font-size: 0.9rem;
         }}
-        .methodology h3 {{ color: #2c3e50; margin-bottom: 15px; }}
-        .methodology p {{ color: #666; margin-bottom: 10px; }}
+        .methodology h3 {{ color: #2c3e50; margin-bottom: 10px; }}
+        .methodology p {{ color: #666; margin-bottom: 8px; }}
+        
         .footer {{
             background: #2c3e50;
             color: white;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
+            font-size: 0.9rem;
         }}
         .footer a {{ color: #3498db; text-decoration: none; }}
         .footer a:hover {{ text-decoration: underline; }}
+        
+        @media (max-width: 768px) {{
+            .model-header {{ font-size: 0.7rem; }}
+            .comic-table {{ font-size: 0.75rem; }}
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎨 PBF Comics AI Benchmark</h1>
-            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics as ground truth</p>
+            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics</p>
         </div>
 
         <div class="stats" id="stats"></div>
 
         <div class="leaderboard">
             <h2>🏆 Leaderboard</h2>
-            <div class="table-container">
-                <table>
+            <div class="leaderboard-table-container">
+                <table class="leaderboard-table">
                     <thead>
                         <tr>
                             <th class="rank">Rank</th>
                             <th class="model-name">Model</th>
-                            <th class="score">Avg Score</th>
+                            <th class="score">Avg</th>
                             <th class="score">Median</th>
                             <th class="score">Best</th>
                             <th class="score">Worst</th>
-                            <th class="score">Comics</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
@@ -224,12 +327,28 @@ def create_leaderboard_html(models):
             </div>
         </div>
 
+        <div class="comic-scores">
+            <h2>📊 Detailed Scores by Comic</h2>
+            <div class="comic-table-container">
+                <table class="comic-table">
+                    <thead>
+                        <tr>
+                            <th class="comic-name">Comic</th>
+                            {model_headers}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {comic_table_html}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="methodology">
             <h3>📊 Methodology</h3>
             <p><strong>Dataset:</strong> {total_comics} Perry Bible Fellowship comics with human-curated ground truth explanations</p>
-            <p><strong>Evaluation:</strong> AI explanations are scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), and clarity (10%)</p>
-            <p><strong>Scoring:</strong> Each criterion is rated 1-10, with the overall score being a weighted average</p>
-            <p><strong>Ground Truth:</strong> Created using candidate explanations from Claude-3.5-Sonnet, Gemini-2.0-Flash, and GPT-4o, then human-selected via web interface</p>
+            <p><strong>Evaluation:</strong> AI explanations scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), clarity (10%)</p>
+            <p><strong>Scoring:</strong> Each criterion rated 1-10, with overall score as weighted average</p>
         </div>
 
         <div class="footer">
@@ -269,19 +388,19 @@ def create_leaderboard_html(models):
             document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${{totalModels}}</div>
-                    <div class="stat-label">AI Models</div>
+                    <div class="stat-label">Models</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${{totalComics}}</div>
-                    <div class="stat-label">Comics Tested</div>
+                    <div class="stat-label">Comics</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${{avgScore}}</div>
-                    <div class="stat-label">Average Score</div>
+                    <div class="stat-label">Avg Score</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">${{bestScore}}</div>
-                    <div class="stat-label">Highest Score</div>
+                    <div class="stat-number">${{bestScore.toFixed(1)}}</div>
+                    <div class="stat-label">Best Score</div>
                 </div>
             `;
         }}
@@ -300,7 +419,6 @@ def create_leaderboard_html(models):
                     <td class="score ${{getScoreClass(model.medianScore)}}">${{model.medianScore.toFixed(2)}}</td>
                     <td class="score ${{getScoreClass(model.maxScore)}}">${{model.maxScore.toFixed(1)}}</td>
                     <td class="score ${{getScoreClass(model.minScore)}}">${{model.minScore.toFixed(1)}}</td>
-                    <td class="score">${{model.totalComics}}</td>
                 </tr>
             `).join('');
         }}
@@ -332,19 +450,22 @@ def main():
     parser = argparse.ArgumentParser(description='Generate PBF Comics AI Benchmark leaderboard')
     parser.add_argument('--csv', default='benchmark_results.csv', 
                        help='Input CSV file with benchmark results')
+    parser.add_argument('--metadata', default='pbf_comics_metadata.json',
+                       help='Comic metadata JSON file')
     parser.add_argument('--output', default='docs/index.html',
                        help='Output HTML file')
     
     args = parser.parse_args()
     
     try:
-        models = load_benchmark_data(args.csv)
+        models, comic_scores = load_benchmark_data(args.csv)
+        metadata = load_metadata(args.metadata)
         
         # Ensure output directory exists
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
         
         # Generate HTML
-        html_content = create_leaderboard_html(models)
+        html_content = create_leaderboard_html(models, comic_scores, metadata)
         
         # Write the HTML file
         with open(args.output, 'w') as f:
@@ -352,11 +473,14 @@ def main():
         
         print(f"✅ Generated leaderboard: {args.output}")
         print(f"📊 {len(models)} models, {models[0]['totalComics'] if models else 0} comics")
+        print(f"📈 {len(comic_scores)} comics with detailed scores")
         if models:
             print(f"🥇 Winner: {models[0]['model']} ({models[0]['avgScore']:.2f})")
         
     except Exception as e:
         print(f"❌ Error generating leaderboard: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
     
     return 0

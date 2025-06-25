@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBF Comics AI Benchmark Leaderboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
@@ -18,201 +13,148 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-
         .header {
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
-            padding: 40px 30px;
+            padding: 30px 20px;
             text-align: center;
         }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
+        .header h1 { font-size: 2rem; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+        
+        /* Compact stats */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
             background: #f8f9fa;
         }
-
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 5px;
+        .stat-number { font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin-bottom: 3px; }
+        .stat-label { color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Compact leaderboard */
+        .leaderboard { padding: 20px; }
+        .leaderboard h2 { font-size: 1.4rem; margin-bottom: 15px; color: #2c3e50; text-align: center; }
+        .leaderboard-table-container { 
+            overflow-x: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
         }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .leaderboard {
-            padding: 0 30px 30px;
-        }
-
-        .leaderboard h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            text-align: center;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th {
+        .leaderboard-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.9rem; }
+        .leaderboard-table th {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
-            padding: 15px 12px;
+            padding: 10px 8px;
             text-align: left;
+            font-weight: 600;
+        }
+        .leaderboard-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .leaderboard-table tr:hover { background: #f8f9fa; }
+        
+        /* Comic scores table */
+        .comic-scores { padding: 0 20px 20px; }
+        .comic-scores h2 { font-size: 1.4rem; margin-bottom: 15px; color: #2c3e50; text-align: center; }
+        .comic-table-container { 
+            overflow-x: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .comic-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.85rem; }
+        .comic-table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px 6px;
             font-weight: 600;
             position: sticky;
             top: 0;
             z-index: 10;
         }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+        .comic-table td { padding: 6px; border-bottom: 1px solid #eee; text-align: center; }
+        .comic-table tr:hover { background: #f8f9fa; }
+        
+        .comic-name { 
+            text-align: left !important; 
+            font-weight: 500; 
+            min-width: 200px;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 5;
         }
-
-        tr:hover {
-            background: #f8f9fa;
+        .comic-name a { color: #2c3e50; text-decoration: none; }
+        .comic-name a:hover { color: #3498db; text-decoration: underline; }
+        
+        .model-header {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            min-width: 40px;
+            max-width: 40px;
+            height: 120px;
+            padding: 10px 2px;
         }
-
-        .rank {
-            font-weight: 700;
-            color: #2c3e50;
-            width: 60px;
-        }
-
-        .model-name {
-            font-weight: 600;
-            color: #2c3e50;
-            min-width: 180px;
-        }
-
-        .score {
-            font-weight: 600;
-            text-align: center;
-            width: 80px;
-        }
-
-        .score.high { color: #27ae60; }
-        .score.medium { color: #f39c12; }
-        .score.low { color: #e74c3c; }
-
-        .medal {
-            font-size: 1.2rem;
-            margin-right: 8px;
-        }
-
+        
+        .rank { font-weight: 700; color: #2c3e50; width: 50px; }
+        .model-name { font-weight: 600; color: #2c3e50; min-width: 150px; }
+        .score { font-weight: 600; text-align: center; width: 60px; }
+        .score.high { background-color: #d4edda; color: #155724; }
+        .score.medium { background-color: #fff3cd; color: #856404; }
+        .score.low { background-color: #f8d7da; color: #721c24; }
+        
         .provider-badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
         }
-
         .anthropic { background: #e8f5e8; color: #2d5a2d; }
         .google { background: #e3f2fd; color: #1565c0; }
         .openai { background: #fff3e0; color: #e65100; }
-
+        
+        .methodology {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        .methodology h3 { color: #2c3e50; margin-bottom: 10px; }
+        .methodology p { color: #666; margin-bottom: 8px; }
+        
         .footer {
             background: #2c3e50;
             color: white;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
+            font-size: 0.9rem;
         }
-
-        .footer a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .methodology {
-            padding: 30px;
-            background: #f8f9fa;
-            border-top: 1px solid #eee;
-        }
-
-        .methodology h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        .methodology p {
-            color: #666;
-            margin-bottom: 10px;
-        }
-
+        .footer a { color: #3498db; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-                padding: 20px;
-            }
-            
-            .leaderboard {
-                padding: 0 15px 20px;
-            }
-            
-            th, td {
-                padding: 8px 6px;
-                font-size: 0.9rem;
-            }
+            .model-header { font-size: 0.7rem; }
+            .comic-table { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -220,30 +162,295 @@
     <div class="container">
         <div class="header">
             <h1>🎨 PBF Comics AI Benchmark</h1>
-            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics as ground truth</p>
+            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics</p>
         </div>
 
-        <div class="stats" id="stats">
-            <!-- Stats will be populated by JavaScript -->
-        </div>
+        <div class="stats" id="stats"></div>
 
         <div class="leaderboard">
             <h2>🏆 Leaderboard</h2>
-            <div class="table-container">
-                <table id="leaderboard-table">
+            <div class="leaderboard-table-container">
+                <table class="leaderboard-table">
                     <thead>
                         <tr>
                             <th class="rank">Rank</th>
                             <th class="model-name">Model</th>
-                            <th class="score">Avg Score</th>
+                            <th class="score">Avg</th>
                             <th class="score">Median</th>
                             <th class="score">Best</th>
                             <th class="score">Worst</th>
-                            <th class="score">Comics</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-body">
-                        <!-- Table rows will be populated by JavaScript -->
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="comic-scores">
+            <h2>📊 Detailed Scores by Comic</h2>
+            <div class="comic-table-container">
+                <table class="comic-table">
+                    <thead>
+                        <tr>
+                            <th class="comic-name">Comic</th>
+                            <th class="model-header">Gemini 2.0 Flash</th><th class="model-header">Gpt 4o Mini</th><th class="model-header">O3 Mini</th><th class="model-header">O4 Mini</th><th class="model-header">Gpt 4.1</th><th class="model-header">Gemini 2.5 Flash</th><th class="model-header">Gpt 4o</th><th class="model-header">Claude 4 Sonnet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="comic-name"><a href="https://pbfcomics.com/comics/kitty-stuck-2/" target="_blank">Kitty Stuck</a></td><td class="score medium">6.4</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.7</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/new-herald-galactus/" target="_blank">New Herald of Galactus</a></td><td class="score medium">6.3</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score medium">6.5</td><td class="score high">7.2</td><td class="score low">3.5</td><td class="score high">7.3</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-blue-hair/" target="_blank">The Blue Hair</a></td><td class="score low">4.3</td><td class="score low">4.5</td><td class="score low">2.4</td><td class="score low">3.5</td><td class="score medium">5.5</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">2.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-green-menace/" target="_blank">The Green Menace</a></td><td class="score low">4.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.7</td><td class="score high">8.5</td><td class="score low">4.8</td><td class="score high">8.8</td><td class="score medium">5.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/keep-on-truckin/" target="_blank">Keep on Truckin&#8217;</a></td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">7.0</td><td class="score high">7.4</td><td class="score high">8.8</td><td class="score medium">5.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/krabzaam/" target="_blank">Krabzaam</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/0-percent-chance/" target="_blank">0 Percent Chance</a></td><td class="score medium">6.6</td><td class="score medium">6.3</td><td class="score medium">5.9</td><td class="score medium">6.4</td><td class="score medium">6.5</td><td class="score medium">6.1</td><td class="score medium">5.7</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/a-fit-of-the-vapours/" target="_blank">A Fit of the Vapours</a></td><td class="score high">9.2</td><td class="score high">9.0</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.5</td><td class="score high">7.0</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/agresion/" target="_blank">Agresion</a></td><td class="score low">4.3</td><td class="score medium">5.4</td><td class="score low">4.6</td><td class="score low">3.7</td><td class="score low">3.7</td><td class="score low">4.2</td><td class="score low">4.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/all-purpose-flour/" target="_blank">All Purpose Flour</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/an-end-to-gopher-trouble/" target="_blank">An End to Gopher Trouble</a></td><td class="score low">4.8</td><td class="score low">3.1</td><td class="score low">2.7</td><td class="score low">3.5</td><td class="score low">3.7</td><td class="score low">3.7</td><td class="score low">3.5</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/clicked/" target="_blank">Clicked</a></td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.1</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/arise/" target="_blank">Arise</a></td><td class="score low">4.3</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.3</td><td class="score high">7.4</td><td class="score medium">5.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/astronaut-fall/" target="_blank">Astronaut Fall</a></td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score high">8.1</td><td class="score high">7.2</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/barkelangelo/" target="_blank">Barkelangelo</a></td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score medium">6.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/battleship/" target="_blank">Battleship</a></td><td class="score low">4.2</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.8</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/big-numbers/" target="_blank">Big Numbers</a></td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/billy-the-bunny/" target="_blank">Billy the Bunny</a></td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bip/" target="_blank">Bip</a></td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score medium">6.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bird-chef/" target="_blank">Bird Chef</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/blocked/" target="_blank">Blocked</a></td><td class="score low">4.3</td><td class="score low">4.8</td><td class="score high">7.1</td><td class="score low">4.5</td><td class="score low">3.9</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/book-world/" target="_blank">Book World</a></td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">9.0</td><td class="score high">9.2</td><td class="score high">9.0</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bright/" target="_blank">Bright</a></td><td class="score medium">6.5</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score low">4.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/brushed/" target="_blank">Brushed</a></td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score medium">6.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bubbled/" target="_blank">Bubbled</a></td><td class="score high">8.8</td><td class="score high">7.6</td><td class="score high">7.7</td><td class="score high">7.5</td><td class="score high">7.7</td><td class="score high">8.1</td><td class="score high">7.7</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/caring-for-your-turtle-2/" target="_blank">Caring for Your Turtle</a></td><td class="score high">7.2</td><td class="score high">8.3</td><td class="score high">7.1</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score low">4.2</td><td class="score high">7.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/charged/" target="_blank">Charged</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.9</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/primate-checkmate/" target="_blank">Primate Checkmate</a></td><td class="score high">8.8</td><td class="score high">7.1</td><td class="score low">4.3</td><td class="score low">3.9</td><td class="score medium">5.9</td><td class="score high">7.4</td><td class="score medium">6.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/clear-boundaries/" target="_blank">Clear Boundaries</a></td><td class="score high">9.2</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/clear-message/" target="_blank">Clear Message</a></td><td class="score low">4.7</td><td class="score high">7.0</td><td class="score high">7.2</td><td class="score low">4.4</td><td class="score medium">6.2</td><td class="score medium">5.4</td><td class="score high">7.0</td><td class="score low">4.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/command-respect/" target="_blank">Command Respect</a></td><td class="score medium">6.4</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">7.1</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score low">2.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/connections/" target="_blank">Connections</a></td><td class="score high">7.2</td><td class="score high">7.1</td><td class="score medium">6.3</td><td class="score medium">5.9</td><td class="score medium">6.1</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/cranky-baby/" target="_blank">Cranky Baby</a></td><td class="score medium">6.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">7.8</td><td class="score medium">5.5</td><td class="score high">9.2</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/cupid-mistake-2/" target="_blank">Cupid Mistake</a></td><td class="score high">7.0</td><td class="score high">7.5</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score high">7.2</td><td class="score high">7.5</td><td class="score high">7.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/spacedout/" target="_blank">Spaced Out</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/deeply-held-beliefs/" target="_blank">Deeply-Held Beliefs</a></td><td class="score low">4.5</td><td class="score high">7.2</td><td class="score low">4.4</td><td class="score low">3.7</td><td class="score medium">5.1</td><td class="score low">4.7</td><td class="score low">4.7</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dinosaur-sheriff/" target="_blank">Dinosaur Sheriff</a></td><td class="score high">8.8</td><td class="score low">3.5</td><td class="score high">7.0</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score high">8.8</td><td class="score medium">5.5</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/disgusting-ted/" target="_blank">Disgusting Ted</a></td><td class="score low">4.3</td><td class="score low">3.5</td><td class="score high">7.2</td><td class="score low">2.9</td><td class="score medium">5.5</td><td class="score medium">6.4</td><td class="score low">3.7</td><td class="score low">1.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/ditty/" target="_blank">Ditty</a></td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">9.2</td><td class="score high">9.0</td><td class="score high">9.2</td><td class="score high">8.1</td><td class="score high">7.2</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dont-be-a-statistic/" target="_blank">Don&#8217;t be a Statistic</a></td><td class="score medium">7.0</td><td class="score medium">6.7</td><td class="score high">9.1</td><td class="score medium">6.7</td><td class="score high">7.5</td><td class="score high">8.4</td><td class="score medium">7.0</td><td class="score medium">6.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dragon/" target="_blank">Dragon</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score medium">6.9</td><td class="score high">7.8</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/executive_decision/" target="_blank">Executive Decision</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/deep-impact/" target="_blank">Deep Impact</a></td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score medium">6.8</td><td class="score high">8.5</td><td class="score high">9.2</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/friendly/" target="_blank">Friendly</a></td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/game-boy/" target="_blank">Game Boy</a></td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.3</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gingerbread-man/" target="_blank">Gingerbread Man</a></td><td class="score low">4.2</td><td class="score medium">6.5</td><td class="score medium">5.5</td><td class="score low">4.5</td><td class="score low">4.4</td><td class="score low">4.9</td><td class="score low">3.5</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gnome-bubbles/" target="_blank">Gnome Bubbles</a></td><td class="score low">4.3</td><td class="score high">7.1</td><td class="score medium">6.1</td><td class="score medium">6.8</td><td class="score medium">6.8</td><td class="score medium">5.3</td><td class="score medium">5.9</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-good-knight/" target="_blank">The Good Knight</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/goodbye-stanley-2/" target="_blank">Goodbye Stanley</a></td><td class="score low">4.5</td><td class="score low">2.4</td><td class="score low">2.8</td><td class="score low">2.4</td><td class="score low">2.9</td><td class="score low">4.6</td><td class="score low">2.4</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gordrags-bane/" target="_blank">Gordrag&#8217;s Bane</a></td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gotcha-the-clown/" target="_blank">Gotcha the Clown</a></td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">5.5</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/grammar-wizard/" target="_blank">Grammar Wizard</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">7.5</td><td class="score high">8.2</td><td class="score medium">5.0</td><td class="score high">8.5</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/grandpas-couch-hot-paper-comics/" target="_blank">Grandpa&#8217;s Couch</a></td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">7.5</td><td class="score high">7.5</td><td class="score high">8.5</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/grandpas-silly-mustache/" target="_blank">Grandpa&#8217;s Silly Mustache</a></td><td class="score medium">6.4</td><td class="score low">3.2</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score high">8.8</td><td class="score low">3.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/growing-together/" target="_blank">Growing Together</a></td><td class="score high">8.8</td><td class="score high">7.6</td><td class="score medium">6.5</td><td class="score high">7.3</td><td class="score medium">5.5</td><td class="score high">8.5</td><td class="score medium">6.3</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/1988-2/" target="_blank">Happy Place</a></td><td class="score medium">6.5</td><td class="score high">7.8</td><td class="score high">7.5</td><td class="score high">7.9</td><td class="score high">7.8</td><td class="score medium">6.3</td><td class="score high">7.9</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/harlots-web/" target="_blank">Harlot&#8217;s Web</a></td><td class="score medium">6.2</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score low">4.7</td><td class="score high">7.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/high-noon/" target="_blank">High Noon</a></td><td class="score medium">5.9</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/hobbitos/" target="_blank">Hobbitos™</a></td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.7</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/by-myself/" target="_blank">Introvertebrate</a></td><td class="score high">7.1</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">3.1</td><td class="score low">4.8</td><td class="score high">7.1</td><td class="score low">3.4</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/hug-bot/" target="_blank">Hug Bot</a></td><td class="score high">8.4</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.3</td><td class="score high">9.2</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/life-sentence/" target="_blank">Life Sentence</a></td><td class="score medium">5.9</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">9.0</td><td class="score medium">6.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/lucky-day/" target="_blank">Lucky Day</a></td><td class="score medium">5.4</td><td class="score medium">5.7</td><td class="score medium">6.4</td><td class="score medium">6.3</td><td class="score high">7.2</td><td class="score low">4.9</td><td class="score high">7.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/marthas-orphanage/" target="_blank">Marthas Orphanage</a></td><td class="score high">9.2</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score medium">6.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/master-yoshi/" target="_blank">Master Yoshi</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/me-ow/" target="_blank">Me Ow</a></td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/memorabilia/" target="_blank">Memorabilia</a></td><td class="score high">7.8</td><td class="score high">7.0</td><td class="score low">3.7</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score medium">6.3</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/missing-school/" target="_blank">Missing School</a></td><td class="score high">8.5</td><td class="score medium">7.0</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.9</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/mittens-2/" target="_blank">Mittens</a></td><td class="score medium">6.8</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/monkey-photographer/" target="_blank">Monkey Photographer</a></td><td class="score high">7.0</td><td class="score low">4.2</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score medium">6.0</td><td class="score high">7.8</td><td class="score low">4.4</td><td class="score low">2.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/mr-scoop/" target="_blank">Mr. Scoop</a></td><td class="score high">8.9</td><td class="score low">3.5</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score low">2.5</td><td class="score high">8.5</td><td class="score low">3.5</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/negative-space/" target="_blank">Negative Space</a></td><td class="score medium">6.2</td><td class="score high">7.1</td><td class="score high">7.8</td><td class="score medium">5.1</td><td class="score high">7.2</td><td class="score low">3.5</td><td class="score medium">6.9</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/nice-shirt/" target="_blank">Nice Shirt</a></td><td class="score high">8.8</td><td class="score high">7.7</td><td class="score high">7.8</td><td class="score high">7.1</td><td class="score high">7.0</td><td class="score high">7.8</td><td class="score high">7.5</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/night-shift/" target="_blank">Night Shift</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/not-a-wolf/" target="_blank">Not a Wolf</a></td><td class="score medium">6.8</td><td class="score high">8.5</td><td class="score high">7.6</td><td class="score medium">6.9</td><td class="score high">7.8</td><td class="score high">7.0</td><td class="score high">7.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/now-showing/" target="_blank">Now Showing</a></td><td class="score high">7.7</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">8.4</td><td class="score high">8.8</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/obscenery/" target="_blank">Obscenery</a></td><td class="score low">4.6</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score medium">5.5</td><td class="score medium">5.5</td><td class="score medium">5.5</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/party-time/" target="_blank">Party Time Flies</a></td><td class="score medium">6.0</td><td class="score medium">5.2</td><td class="score high">7.2</td><td class="score medium">6.5</td><td class="score high">8.5</td><td class="score low">4.8</td><td class="score medium">5.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/please/" target="_blank">Please</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">5.5</td><td class="score high">8.1</td><td class="score medium">5.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/pop/" target="_blank">Pop</a></td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score low">4.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/prehistoric-park/" target="_blank">Prehistoric Park</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/preserves/" target="_blank">Preserves</a></td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/holiday-flavor/" target="_blank">Holiday Flavor</a></td><td class="score low">4.2</td><td class="score low">3.5</td><td class="score medium">6.8</td><td class="score low">3.7</td><td class="score low">4.2</td><td class="score low">4.1</td><td class="score low">3.9</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/punch-bout/" target="_blank">Punch Bout</a></td><td class="score high">8.5</td><td class="score medium">6.3</td><td class="score medium">6.5</td><td class="score medium">5.9</td><td class="score high">7.3</td><td class="score high">8.2</td><td class="score high">8.2</td><td class="score low">4.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/puzzled/" target="_blank">Puzzled</a></td><td class="score low">4.5</td><td class="score high">7.2</td><td class="score medium">6.3</td><td class="score high">7.0</td><td class="score high">7.2</td><td class="score low">3.7</td><td class="score high">7.1</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/quiz-kid/" target="_blank">Quiz Kid</a></td><td class="score medium">6.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score medium">5.9</td><td class="score high">8.8</td><td class="score medium">5.3</td><td class="score high">7.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/returned-mail/" target="_blank">Returned Mail</a></td><td class="score medium">6.5</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score medium">6.2</td><td class="score high">7.0</td><td class="score low">2.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/robin-hood/" target="_blank">Robin Hood</a></td><td class="score high">7.0</td><td class="score high">8.1</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/rubbed/" target="_blank">Rubbed</a></td><td class="score low">4.8</td><td class="score medium">6.4</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">7.7</td><td class="score low">4.3</td><td class="score high">8.8</td><td class="score low">3.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/geopardy/" target="_blank">Geopardy</a></td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.2</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/scorchy/" target="_blank">Scorchy</a></td><td class="score high">7.7</td><td class="score medium">6.8</td><td class="score high">7.0</td><td class="score medium">6.5</td><td class="score medium">5.9</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/secret-mutant-hero-team/" target="_blank">Secret Mutant Hero Team</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score low">2.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/seltzer/" target="_blank">Seltzer</a></td><td class="score high">8.7</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score low">3.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sex-show/" target="_blank">Sex Show</a></td><td class="score medium">5.9</td><td class="score medium">5.3</td><td class="score low">4.3</td><td class="score medium">5.2</td><td class="score low">4.4</td><td class="score medium">6.5</td><td class="score low">4.1</td><td class="score low">2.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sir-leopold/" target="_blank">Sir Leopold</a></td><td class="score high">7.7</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score medium">5.7</td><td class="score high">8.8</td><td class="score low">2.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sisyphus-myth/" target="_blank">Sisyphus Myth</a></td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.2</td><td class="score high">7.4</td><td class="score high">7.3</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/skub/" target="_blank">Skub</a></td><td class="score high">9.2</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/slamasaurus/" target="_blank">Slamasaurus</a></td><td class="score medium">5.9</td><td class="score medium">5.3</td><td class="score medium">5.4</td><td class="score medium">5.1</td><td class="score medium">6.1</td><td class="score medium">6.2</td><td class="score low">4.9</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sloshed/" target="_blank">Sloshed</a></td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score high">7.5</td><td class="score high">7.5</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/snow-globepbf281/" target="_blank">Snow Globe</a></td><td class="score high">7.2</td><td class="score high">8.3</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score low">4.7</td><td class="score medium">6.5</td><td class="score low">4.7</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/solved/" target="_blank">Solved</a></td><td class="score medium">6.8</td><td class="score medium">5.5</td><td class="score low">4.5</td><td class="score low">4.3</td><td class="score low">4.4</td><td class="score medium">5.1</td><td class="score medium">6.5</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/spared/" target="_blank">Spared</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">9.2</td><td class="score high">9.0</td><td class="score medium">5.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/splash-down/" target="_blank">Splash Down</a></td><td class="score low">3.7</td><td class="score medium">6.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.3</td><td class="score medium">6.5</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/standards/" target="_blank">Standards</a></td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">7.2</td><td class="score high">7.3</td><td class="score high">9.2</td><td class="score high">7.3</td><td class="score medium">6.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/styled/" target="_blank">Styled</a></td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">7.1</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/substitute/" target="_blank">Substitute</a></td><td class="score high">8.1</td><td class="score medium">6.3</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/super-league/" target="_blank">Super League</a></td><td class="score high">8.2</td><td class="score high">8.2</td><td class="score high">8.3</td><td class="score high">8.3</td><td class="score high">7.3</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-ants-dance/" target="_blank">The Ants Dance</a></td><td class="score medium">6.3</td><td class="score medium">5.1</td><td class="score medium">5.7</td><td class="score medium">6.6</td><td class="score low">3.7</td><td class="score medium">5.3</td><td class="score low">3.9</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-golden-ticket/" target="_blank">The Golden Ticket</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-hare-and-the-tortoise/" target="_blank">The Hare and the Tortoise</a></td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">8.2</td><td class="score high">8.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-order/" target="_blank">The Order</a></td><td class="score high">8.8</td><td class="score medium">6.3</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score medium">5.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-treat/" target="_blank">The Treat</a></td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score low">4.7</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the_extraction/" target="_blank">The Extraction</a></td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">7.4</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-flight/" target="_blank">The Flight</a></td><td class="score high">9.2</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-forbidden-cave/" target="_blank">The Forbidden Cave</a></td><td class="score high">8.4</td><td class="score high">8.3</td><td class="score high">7.7</td><td class="score medium">6.8</td><td class="score high">8.0</td><td class="score high">8.8</td><td class="score high">7.4</td><td class="score low">3.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/invasion/" target="_blank">Invasion</a></td><td class="score low">4.3</td><td class="score low">4.8</td><td class="score low">4.9</td><td class="score low">4.3</td><td class="score low">4.8</td><td class="score low">4.4</td><td class="score medium">6.1</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-report/" target="_blank">The Report</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-shrink-ray/" target="_blank">The Shrink Ray</a></td><td class="score medium">5.2</td><td class="score low">4.2</td><td class="score low">4.3</td><td class="score low">3.9</td><td class="score low">3.9</td><td class="score medium">6.2</td><td class="score low">4.3</td><td class="score low">2.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-talk/" target="_blank">The Talk</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/theres-something-about-him/" target="_blank">There&#8217;s Something About Him</a></td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score high">8.8</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/tickle-monster/" target="_blank">Tickle Monster</a></td><td class="score low">4.3</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score medium">6.9</td><td class="score high">7.3</td><td class="score low">4.3</td><td class="score medium">6.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/today-i-am-going-to-fly/" target="_blank">Today I am Going to Fly</a></td><td class="score high">8.2</td><td class="score low">4.5</td><td class="score medium">6.3</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.1</td><td class="score medium">6.2</td><td class="score medium">6.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/todays-my-birthday/" target="_blank">Today&#8217;s My Birthday</a></td><td class="score medium">6.3</td><td class="score medium">6.3</td><td class="score high">7.0</td><td class="score medium">6.3</td><td class="score medium">6.3</td><td class="score medium">5.4</td><td class="score medium">6.4</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/trauma-trooper/" target="_blank">Trauma Trooper</a></td><td class="score high">8.1</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.4</td><td class="score high">9.2</td><td class="score low">3.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/treatment/" target="_blank">Treatment</a></td><td class="score medium">5.8</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">4.3</td><td class="score medium">5.4</td><td class="score medium">5.9</td><td class="score low">4.2</td><td class="score low">2.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/turn-that-frown/" target="_blank">Turn That Frown</a></td><td class="score high">7.7</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-lost-mitten-part-1/" target="_blank">The Lost Mitten: Part 1</a></td><td class="score high">8.5</td><td class="score high">8.3</td><td class="score medium">6.3</td><td class="score medium">6.4</td><td class="score medium">6.0</td><td class="score high">8.5</td><td class="score high">7.3</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/uncle-duncan/" target="_blank">Uncle Duncan</a></td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/us/" target="_blank">Us</a></td><td class="score high">7.2</td><td class="score medium">6.5</td><td class="score medium">6.8</td><td class="score medium">6.8</td><td class="score low">4.1</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/way_too_much/" target="_blank">Way Too Much (Apologies to Bil Keane)</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.4</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/wise-shitashi/" target="_blank">Wise Shitashi</a></td><td class="score high">8.8</td><td class="score medium">5.5</td><td class="score low">4.5</td><td class="score high">7.0</td><td class="score medium">5.4</td><td class="score high">7.6</td><td class="score low">4.3</td><td class="score low">4.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/worm-squish/" target="_blank">Worm Squish</a></td><td class="score medium">5.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.1</td><td class="score medium">6.2</td><td class="score high">7.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/youll-be-ok/" target="_blank">You&#8217;ll Be OK</a></td><td class="score high">7.2</td><td class="score medium">5.5</td><td class="score medium">5.7</td><td class="score medium">6.5</td><td class="score medium">5.7</td><td class="score medium">6.1</td><td class="score medium">5.7</td><td class="score low">4.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/stiff-breeze/" target="_blank">Stiff Breeze</a></td><td class="score high">7.3</td><td class="score medium">6.9</td><td class="score medium">6.4</td><td class="score high">7.4</td><td class="score low">4.4</td><td class="score low">4.2</td><td class="score medium">6.5</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dad-and-monster/" target="_blank">Dad and Monster</a></td><td class="score high">7.9</td><td class="score low">4.7</td><td class="score medium">6.1</td><td class="score medium">6.7</td><td class="score medium">6.4</td><td class="score medium">5.5</td><td class="score medium">6.4</td><td class="score high">7.0</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/billiards-in-heaven/" target="_blank">Billiards in Heaven</a></td><td class="score high">8.8</td><td class="score high">8.3</td><td class="score high">8.5</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/instant-bacon-2/" target="_blank">Instant Bacon</a></td><td class="score high">8.8</td><td class="score low">3.5</td><td class="score low">2.4</td><td class="score low">2.7</td><td class="score medium">5.2</td><td class="score high">8.8</td><td class="score low">3.7</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/doomsday-news/" target="_blank">Doomsday News</a></td><td class="score high">8.2</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">7.2</td><td class="score high">9.2</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/space-helmet/" target="_blank">Space Helmet</a></td><td class="score low">4.7</td><td class="score low">3.5</td><td class="score medium">5.1</td><td class="score low">3.5</td><td class="score low">4.2</td><td class="score low">3.7</td><td class="score medium">5.2</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/puppy-wish/" target="_blank">Puppy Wish</a></td><td class="score high">8.5</td><td class="score high">8.2</td><td class="score high">8.2</td><td class="score high">7.9</td><td class="score high">7.2</td><td class="score high">8.5</td><td class="score high">8.3</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/rainbow/" target="_blank">Rainbow</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/butterflies/" target="_blank">Butterflies</a></td><td class="score medium">5.9</td><td class="score low">3.7</td><td class="score medium">5.5</td><td class="score medium">6.4</td><td class="score medium">5.5</td><td class="score low">3.7</td><td class="score medium">6.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dinner-time-machine/" target="_blank">Dinner Time Machine</a></td><td class="score high">8.1</td><td class="score medium">5.6</td><td class="score medium">5.5</td><td class="score medium">5.7</td><td class="score medium">5.5</td><td class="score high">8.8</td><td class="score medium">5.7</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gopher-girlfriend/" target="_blank">Gopher Girlfriend</a></td><td class="score medium">5.2</td><td class="score low">2.8</td><td class="score low">4.3</td><td class="score low">3.5</td><td class="score low">3.1</td><td class="score high">7.0</td><td class="score low">3.1</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bear-boy/" target="_blank">Bear Boy</a></td><td class="score high">8.8</td><td class="score medium">6.9</td><td class="score medium">5.5</td><td class="score medium">6.5</td><td class="score medium">6.5</td><td class="score high">8.1</td><td class="score medium">5.9</td><td class="score low">3.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/pyro-billy/" target="_blank">Pyro Billy</a></td><td class="score high">7.6</td><td class="score low">4.3</td><td class="score low">4.5</td><td class="score medium">5.5</td><td class="score low">3.5</td><td class="score high">7.8</td><td class="score low">3.8</td><td class="score medium">5.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/nude-beach/" target="_blank">Nude Beach</a></td><td class="score high">8.8</td><td class="score high">7.6</td><td class="score high">7.2</td><td class="score medium">6.9</td><td class="score medium">6.2</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sun-love/" target="_blank">Sun Love</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">7.5</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/falling-dream/" target="_blank">Falling Dream</a></td><td class="score medium">6.8</td><td class="score medium">6.4</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">8.5</td><td class="score low">3.9</td><td class="score high">7.0</td><td class="score low">2.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/suicide-train/" target="_blank">Suicide Train</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/kinder-interview/" target="_blank">Kinder Interview</a></td><td class="score low">4.4</td><td class="score medium">5.5</td><td class="score medium">5.2</td><td class="score low">4.4</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score low">4.2</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/small-man/" target="_blank">Small Man</a></td><td class="score low">4.4</td><td class="score medium">6.1</td><td class="score medium">5.7</td><td class="score medium">6.1</td><td class="score high">7.0</td><td class="score low">3.7</td><td class="score medium">5.2</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/penguin-enemy-2/" target="_blank">Penguin Enemy</a></td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">8.2</td><td class="score high">7.8</td><td class="score high">9.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/turtle-city/" target="_blank">Turtle City</a></td><td class="score medium">5.5</td><td class="score medium">5.5</td><td class="score medium">5.5</td><td class="score high">7.0</td><td class="score medium">6.5</td><td class="score medium">6.3</td><td class="score medium">6.4</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/better-luck/" target="_blank">Better Luck</a></td><td class="score high">7.6</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/not_today/" target="_blank">Not Today</a></td><td class="score high">7.2</td><td class="score high">7.1</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score low">4.5</td><td class="score high">7.6</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/weeaboo/" target="_blank">Weeaboo</a></td><td class="score medium">6.1</td><td class="score high">8.8</td><td class="score high">8.0</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score medium">6.0</td><td class="score high">8.8</td><td class="score medium">5.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/barb_and_rudy/" target="_blank">Barb and Rudy</a></td><td class="score high">8.5</td><td class="score high">7.1</td><td class="score medium">6.9</td><td class="score medium">5.2</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bunny-pit/" target="_blank">Bunny Pit</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.3</td><td class="score high">8.3</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">4.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/christmas-surgery-2/" target="_blank">Christmas Surgery</a></td><td class="score low">4.9</td><td class="score low">4.2</td><td class="score low">3.4</td><td class="score low">3.9</td><td class="score low">4.1</td><td class="score low">4.8</td><td class="score low">3.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/qpi-interview/" target="_blank">QPI Interview</a></td><td class="score high">7.3</td><td class="score medium">6.5</td><td class="score medium">5.9</td><td class="score medium">6.5</td><td class="score high">7.0</td><td class="score high">8.5</td><td class="score medium">6.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/snail-harassment/" target="_blank">Snail Harassment</a></td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">5.2</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/no-survivors/" target="_blank">No Survivors</a></td><td class="score high">8.2</td><td class="score high">7.8</td><td class="score high">7.3</td><td class="score high">7.9</td><td class="score high">8.2</td><td class="score high">8.5</td><td class="score high">7.7</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/mrs-hammer/" target="_blank">Mrs. Hammer</a></td><td class="score medium">6.5</td><td class="score low">3.7</td><td class="score medium">6.3</td><td class="score medium">6.5</td><td class="score low">4.1</td><td class="score medium">6.5</td><td class="score low">3.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/freaking_vortex/" target="_blank">Freaking Vortex</a></td><td class="score medium">6.8</td><td class="score medium">5.5</td><td class="score medium">6.1</td><td class="score medium">6.1</td><td class="score medium">5.1</td><td class="score medium">6.8</td><td class="score medium">6.1</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/sgt-grumbles/" target="_blank">Sgt. Grumbles</a></td><td class="score medium">5.7</td><td class="score high">8.1</td><td class="score high">7.0</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score medium">5.4</td><td class="score high">7.2</td><td class="score low">4.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/genius-sir/" target="_blank">Genius Sir</a></td><td class="score low">3.7</td><td class="score high">7.9</td><td class="score high">9.0</td><td class="score high">8.1</td><td class="score high">7.8</td><td class="score low">3.9</td><td class="score high">8.8</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/reset/" target="_blank">Reset</a></td><td class="score medium">6.2</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/mr-rex/" target="_blank">Mr. Rex</a></td><td class="score high">7.2</td><td class="score high">7.1</td><td class="score high">7.0</td><td class="score high">7.8</td><td class="score high">8.2</td><td class="score high">7.7</td><td class="score high">8.5</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/shotgun/" target="_blank">Shotgun</a></td><td class="score high">7.1</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.3</td><td class="score high">7.0</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score low">3.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/mime-city/" target="_blank">Mime City</a></td><td class="score medium">5.4</td><td class="score low">3.7</td><td class="score low">3.5</td><td class="score low">3.7</td><td class="score low">3.5</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/colonel-sweeto/" target="_blank">Colonel Sweeto</a></td><td class="score medium">6.2</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score medium">6.2</td><td class="score medium">6.5</td><td class="score low">4.7</td><td class="score medium">6.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/lord-gloom/" target="_blank">Lord Gloom</a></td><td class="score medium">5.5</td><td class="score low">4.6</td><td class="score low">3.5</td><td class="score low">3.1</td><td class="score low">3.1</td><td class="score high">7.1</td><td class="score low">3.1</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/love-lizard-2/" target="_blank">Love Lizard</a></td><td class="score high">7.0</td><td class="score high">7.7</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score low">3.3</td><td class="score medium">6.2</td><td class="score low">3.7</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/satans-hell/" target="_blank">Satans Hell</a></td><td class="score medium">6.2</td><td class="score high">7.5</td><td class="score medium">6.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score medium">6.3</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/kids-are-thursty/" target="_blank">Kids Are Thursty</a></td><td class="score high">8.2</td><td class="score high">8.5</td><td class="score high">7.3</td><td class="score medium">6.8</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score medium">6.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/a-hit-for-bobby/" target="_blank">A Hit for Bobby</a></td><td class="score low">3.9</td><td class="score medium">6.1</td><td class="score medium">6.9</td><td class="score medium">5.5</td><td class="score medium">6.3</td><td class="score low">3.8</td><td class="score medium">5.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/b/" target="_blank">b</a></td><td class="score low">4.3</td><td class="score high">8.2</td><td class="score high">7.3</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score medium">5.3</td><td class="score low">3.9</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/scorpy-the-forest-friend/" target="_blank">Scorpy the Forest Friend</a></td><td class="score low">3.7</td><td class="score low">4.1</td><td class="score low">4.8</td><td class="score medium">6.5</td><td class="score medium">5.8</td><td class="score low">3.9</td><td class="score medium">6.4</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/zuthulus-resurrection/" target="_blank">Zuthulus Resurrection</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.4</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/disassemble/" target="_blank">Disassemble</a></td><td class="score medium">5.1</td><td class="score medium">6.0</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score high">7.1</td><td class="score medium">5.0</td><td class="score high">7.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/slim/" target="_blank">Slim</a></td><td class="score low">3.9</td><td class="score high">7.1</td><td class="score low">3.5</td><td class="score high">7.0</td><td class="score high">7.0</td><td class="score low">4.1</td><td class="score low">3.7</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-dreamcatcher-3000/" target="_blank">The Dreamcatcher 3000</a></td><td class="score high">8.3</td><td class="score high">7.0</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/cave-explorer/" target="_blank">Cave Explorer</a></td><td class="score medium">5.2</td><td class="score medium">5.7</td><td class="score low">3.7</td><td class="score medium">5.2</td><td class="score medium">5.5</td><td class="score medium">6.3</td><td class="score low">4.4</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/prank-dragon/" target="_blank">Prank Dragon</a></td><td class="score low">3.9</td><td class="score low">3.7</td><td class="score low">3.9</td><td class="score low">2.9</td><td class="score low">3.9</td><td class="score low">3.1</td><td class="score low">3.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/boss/" target="_blank">Boss</a></td><td class="score low">3.9</td><td class="score medium">6.2</td><td class="score medium">5.5</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score high">7.1</td><td class="score medium">6.2</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/truancy-bot/" target="_blank">Truancy bot</a></td><td class="score medium">6.9</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.1</td><td class="score high">8.8</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/food-fight/" target="_blank">Food Fight</a></td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">7.4</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/durab-inc/" target="_blank">Durab Inc.</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score medium">5.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/tunnel-of-love/" target="_blank">Tunnel of Love</a></td><td class="score medium">5.7</td><td class="score low">4.4</td><td class="score low">3.5</td><td class="score low">3.3</td><td class="score low">2.8</td><td class="score low">4.3</td><td class="score low">4.3</td><td class="score low">3.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/guntron/" target="_blank">Guntron</a></td><td class="score low">3.5</td><td class="score low">4.2</td><td class="score low">3.5</td><td class="score medium">5.1</td><td class="score low">3.7</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/boy-scouts/" target="_blank">Boy Scouts</a></td><td class="score low">4.5</td><td class="score high">7.2</td><td class="score medium">6.9</td><td class="score medium">5.7</td><td class="score medium">6.1</td><td class="score low">4.5</td><td class="score medium">6.9</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-pacific-council/" target="_blank">The Pacific Council</a></td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.7</td><td class="score high">8.1</td><td class="score high">7.2</td><td class="score low">4.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/cover-blown/" target="_blank">Cover Blown</a></td><td class="score low">3.7</td><td class="score low">2.8</td><td class="score low">2.6</td><td class="score low">2.6</td><td class="score low">2.6</td><td class="score low">3.9</td><td class="score low">2.8</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/les-douleurs-de-la-morte/" target="_blank">Les Douleurs de la Morte</a></td><td class="score low">4.5</td><td class="score high">7.5</td><td class="score medium">6.9</td><td class="score low">4.2</td><td class="score low">2.9</td><td class="score medium">5.5</td><td class="score medium">6.0</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/toad-race/" target="_blank">Toad Race</a></td><td class="score low">3.3</td><td class="score low">4.4</td><td class="score low">3.5</td><td class="score low">4.2</td><td class="score low">4.1</td><td class="score low">4.5</td><td class="score medium">5.7</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/post-apocalyptic/" target="_blank">Post Apocalyptic</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">7.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/eggnancy/" target="_blank">Eggnancy</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score low">3.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/wishing-well/" target="_blank">Wishing Well</a></td><td class="score low">4.3</td><td class="score medium">6.6</td><td class="score high">7.2</td><td class="score medium">6.5</td><td class="score medium">6.8</td><td class="score low">3.9</td><td class="score medium">6.9</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/atlantis/" target="_blank">Atlantis</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.2</td><td class="score high">9.1</td><td class="score high">9.0</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/kitty-photographer/" target="_blank">Kitty Photographer</a></td><td class="score medium">6.2</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score low">4.7</td><td class="score high">8.5</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/thwack-ye-mole/" target="_blank">Thwack Ye Mole</a></td><td class="score medium">6.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.4</td><td class="score high">8.2</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/magic-eyes/" target="_blank">Magic Eyes</a></td><td class="score high">7.8</td><td class="score high">7.0</td><td class="score medium">6.4</td><td class="score medium">5.5</td><td class="score low">3.7</td><td class="score high">7.8</td><td class="score low">4.5</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-great-circle/" target="_blank">The Great Circle</a></td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.0</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/transfer-patient/" target="_blank">Transfer Patient</a></td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">7.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">7.1</td><td class="score high">8.5</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/passed-on/" target="_blank">Passed On</a></td><td class="score high">7.2</td><td class="score high">7.3</td><td class="score high">8.5</td><td class="score medium">6.8</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gamblin-man/" target="_blank">Gamblin Man</a></td><td class="score high">8.8</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/commander-crisp/" target="_blank">Commander Crisp</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-masculator/" target="_blank">The Masculator</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/miggs/" target="_blank">Miggs</a></td><td class="score low">4.9</td><td class="score medium">5.9</td><td class="score low">3.5</td><td class="score medium">6.3</td><td class="score low">4.4</td><td class="score low">4.9</td><td class="score low">3.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/baby/" target="_blank">Baby</a></td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">7.3</td><td class="score high">7.8</td><td class="score high">7.7</td><td class="score high">7.6</td><td class="score high">7.0</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/psychoanalyst/" target="_blank">Psychoanalyst</a></td><td class="score high">8.5</td><td class="score high">7.5</td><td class="score medium">5.5</td><td class="score high">7.3</td><td class="score medium">6.8</td><td class="score high">8.8</td><td class="score low">3.7</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/finneas/" target="_blank">Finneas</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">5.2</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/lyles-constant/" target="_blank">Lyle&#8217;s Constant</a></td><td class="score high">8.2</td><td class="score high">7.9</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">8.2</td><td class="score medium">5.9</td><td class="score high">7.3</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/capital_punishment/" target="_blank">Capital Punishment</a></td><td class="score medium">5.7</td><td class="score medium">5.5</td><td class="score high">7.9</td><td class="score medium">5.1</td><td class="score medium">7.0</td><td class="score low">3.5</td><td class="score medium">5.5</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/trunkle/" target="_blank">Trunkle</a></td><td class="score low">4.3</td><td class="score low">3.5</td><td class="score low">2.6</td><td class="score low">2.5</td><td class="score low">2.1</td><td class="score low">3.5</td><td class="score low">2.5</td><td class="score low">2.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bee/" target="_blank">Bee</a></td><td class="score low">4.1</td><td class="score medium">6.2</td><td class="score high">7.2</td><td class="score medium">6.3</td><td class="score high">7.9</td><td class="score medium">6.2</td><td class="score medium">6.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/transmission/" target="_blank">Transmission</a></td><td class="score medium">6.7</td><td class="score medium">6.3</td><td class="score low">3.4</td><td class="score low">3.1</td><td class="score medium">5.5</td><td class="score high">7.2</td><td class="score low">4.4</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/evolving-to-fly/" target="_blank">Evolving to Fly</a></td><td class="score medium">5.8</td><td class="score medium">5.7</td><td class="score medium">5.7</td><td class="score low">3.9</td><td class="score medium">5.7</td><td class="score medium">5.7</td><td class="score medium">5.7</td><td class="score low">3.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-last-unicorns/" target="_blank">The Last Unicorns</a></td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.3</td><td class="score high">7.6</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">7.3</td><td class="score high">7.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/roxanne/" target="_blank">Roxanne</a></td><td class="score medium">5.9</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score medium">6.2</td><td class="score high">7.0</td><td class="score high">8.2</td><td class="score high">7.1</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/different/" target="_blank">Different</a></td><td class="score medium">6.1</td><td class="score medium">5.2</td><td class="score low">3.5</td><td class="score low">3.7</td><td class="score medium">5.2</td><td class="score low">4.7</td><td class="score medium">5.5</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/for-baskins/" target="_blank">For Baskins</a></td><td class="score high">7.0</td><td class="score high">7.2</td><td class="score medium">5.2</td><td class="score high">8.5</td><td class="score high">7.8</td><td class="score low">4.3</td><td class="score high">7.8</td><td class="score low">3.1</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/one-time-thing/" target="_blank">One Time Thing</a></td><td class="score high">8.5</td><td class="score high">7.0</td><td class="score high">8.3</td><td class="score high">7.3</td><td class="score medium">6.1</td><td class="score high">7.8</td><td class="score medium">5.7</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/honk/" target="_blank">Honk</a></td><td class="score medium">5.8</td><td class="score high">7.2</td><td class="score high">7.5</td><td class="score high">7.2</td><td class="score high">8.5</td><td class="score medium">5.4</td><td class="score high">8.8</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/beach-closing/" target="_blank">Beach Closing</a></td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score high">8.6</td><td class="score high">8.7</td><td class="score high">9.1</td><td class="score high">8.7</td><td class="score high">8.7</td><td class="score low">4.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-drift/" target="_blank">The Drift</a></td><td class="score low">4.5</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score low">3.9</td><td class="score high">8.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/shop-class/" target="_blank">Shop</a></td><td class="score medium">6.2</td><td class="score high">7.6</td><td class="score medium">5.5</td><td class="score high">7.5</td><td class="score low">4.8</td><td class="score medium">6.3</td><td class="score high">7.0</td><td class="score low">4.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dreamcatcher/" target="_blank">Dreamcatcher</a></td><td class="score high">7.7</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/harmony/" target="_blank">Harmony</a></td><td class="score low">3.7</td><td class="score medium">5.2</td><td class="score medium">5.7</td><td class="score medium">5.2</td><td class="score low">4.5</td><td class="score low">3.5</td><td class="score medium">6.5</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/matched/" target="_blank">Matched</a></td><td class="score high">7.2</td><td class="score medium">5.5</td><td class="score medium">6.5</td><td class="score medium">6.5</td><td class="score medium">6.5</td><td class="score high">7.2</td><td class="score medium">6.5</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/caught/" target="_blank">Caught</a></td><td class="score high">7.5</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score low">2.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-breakthrough/" target="_blank">The Breakthrough</a></td><td class="score low">3.3</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score medium">6.2</td><td class="score high">8.8</td><td class="score low">2.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/cats/" target="_blank">Cats</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">9.0</td><td class="score high">9.2</td><td class="score medium">6.8</td><td class="score low">2.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-jubilee/" target="_blank">The Jubilee</a></td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">8.2</td><td class="score low">3.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/spelling/" target="_blank">Spelling</a></td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/bully/" target="_blank">Bully</a></td><td class="score medium">5.4</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score medium">5.4</td><td class="score high">8.5</td><td class="score low">1.9</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/adam-2-0/" target="_blank">Adam 2.0</a></td><td class="score high">7.9</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.5</td><td class="score high">8.8</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score low">2.6</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/lamb-of-god/" target="_blank">Lamb of God</a></td><td class="score low">4.9</td><td class="score medium">6.1</td><td class="score medium">5.6</td><td class="score low">4.2</td><td class="score medium">5.9</td><td class="score medium">5.5</td><td class="score medium">5.8</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/splitting-up/" target="_blank">Splitting Up</a></td><td class="score medium">5.5</td><td class="score high">8.8</td><td class="score high">7.7</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.9</td><td class="score medium">6.5</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/metamorph-assist/" target="_blank">Metamorph-Assist</a></td><td class="score high">8.8</td><td class="score medium">6.2</td><td class="score high">7.2</td><td class="score medium">6.2</td><td class="score high">7.0</td><td class="score high">7.8</td><td class="score medium">6.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/technorgy/" target="_blank">Technorgy</a></td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score high">7.7</td><td class="score high">7.8</td><td class="score high">7.2</td><td class="score medium">6.8</td><td class="score high">8.7</td><td class="score low">3.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/pbf282-smile/" target="_blank">Smile</a></td><td class="score high">9.4</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.2</td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score medium">6.2</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/shocked/" target="_blank">Shocked</a></td><td class="score medium">6.2</td><td class="score low">4.6</td><td class="score medium">6.8</td><td class="score medium">6.5</td><td class="score medium">6.1</td><td class="score high">8.5</td><td class="score medium">5.5</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/news-puppy/" target="_blank">News Puppy</a></td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score high">7.1</td><td class="score high">7.9</td><td class="score high">9.0</td><td class="score high">9.2</td><td class="score high">8.8</td><td class="score low">3.3</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/amends/" target="_blank">Amends</a></td><td class="score high">8.1</td><td class="score high">9.2</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">8.5</td><td class="score high">9.0</td><td class="score high">7.7</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/electro-sutra/" target="_blank">Electro Sutra</a></td><td class="score low">4.4</td><td class="score low">3.3</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">3.5</td><td class="score low">3.7</td><td class="score low">3.5</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/dick/" target="_blank">Dick</a></td><td class="score high">9.0</td><td class="score high">7.2</td><td class="score high">7.0</td><td class="score high">7.8</td><td class="score high">7.5</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score low">2.4</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/gentleworms/" target="_blank">Gentleworms</a></td><td class="score medium">6.6</td><td class="score medium">5.2</td><td class="score medium">5.2</td><td class="score high">7.0</td><td class="score medium">6.1</td><td class="score medium">5.7</td><td class="score medium">6.3</td><td class="score medium">5.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/untitled-candle-comic/" target="_blank">Putting Out</a></td><td class="score high">7.2</td><td class="score high">8.1</td><td class="score high">7.7</td><td class="score high">8.1</td><td class="score high">8.8</td><td class="score high">7.2</td><td class="score high">7.8</td><td class="score low">3.5</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/casting-call/" target="_blank">Casting Call</a></td><td class="score high">7.3</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">9.2</td><td class="score high">9.2</td><td class="score high">7.0</td><td class="score high">8.8</td><td class="score low">2.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/horny-cloud/" target="_blank">Horny Cloud</a></td><td class="score high">7.2</td><td class="score low">2.8</td><td class="score low">2.9</td><td class="score low">2.9</td><td class="score low">3.7</td><td class="score medium">6.3</td><td class="score low">2.4</td><td class="score low">2.8</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/the-mission/" target="_blank">The Mission</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">7.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">9.2</td><td class="score high">7.8</td><td class="score medium">5.7</td></tr>
+<tr><td class="comic-name"><a href="https://pbfcomics.com/comics/carolyn-vert/" target="_blank">Carolyn</a></td><td class="score high">8.8</td><td class="score high">8.8</td><td class="score high">8.5</td><td class="score high">7.7</td><td class="score high">7.2</td><td class="score high">8.8</td><td class="score medium">6.8</td><td class="score low">2.4</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -252,21 +459,19 @@
         <div class="methodology">
             <h3>📊 Methodology</h3>
             <p><strong>Dataset:</strong> 285 Perry Bible Fellowship comics with human-curated ground truth explanations</p>
-            <p><strong>Evaluation:</strong> AI explanations are scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), and clarity (10%)</p>
-            <p><strong>Scoring:</strong> Each criterion is rated 1-10, with the overall score being a weighted average</p>
-            <p><strong>Ground Truth:</strong> Created using candidate explanations from Claude-3.5-Sonnet, Gemini-2.0-Flash, and GPT-4o, then human-selected via web interface</p>
+            <p><strong>Evaluation:</strong> AI explanations scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), clarity (10%)</p>
+            <p><strong>Scoring:</strong> Each criterion rated 1-10, with overall score as weighted average</p>
         </div>
 
         <div class="footer">
             <p>📈 Last updated: <span id="last-updated"></span></p>
             <p>🔗 <a href="https://github.com/yourusername/pbf-bench" target="_blank">View on GitHub</a> | 
-               📊 <a href="benchmark_results.csv" target="_blank">Download CSV</a> | 
-               📄 <a href="benchmark_details.json" target="_blank">Detailed Results</a></p>
+               📊 <a href="../benchmark_results.csv" target="_blank">Download CSV</a> | 
+               📄 <a href="../benchmark_details.json" target="_blank">Detailed Results</a></p>
         </div>
     </div>
 
     <script>
-        // Benchmark data - this would typically be loaded from the CSV or JSON
         const benchmarkData = [
   {
     "model": "Gemini 2.0 Flash",
@@ -391,36 +596,36 @@
 
         function populateStats() {
             const totalModels = benchmarkData.length;
-            const totalComics = benchmarkData[0].totalComics;
-            const avgScore = (benchmarkData.reduce((sum, model) => sum + model.avgScore, 0) / totalModels).toFixed(2);
-            const bestScore = Math.max(...benchmarkData.map(model => model.maxScore));
+            const totalComics = benchmarkData[0]?.totalComics || 0;
+            const avgScore = totalModels > 0 ? 
+                (benchmarkData.reduce((sum, model) => sum + model.avgScore, 0) / totalModels).toFixed(2) : 0;
+            const bestScore = totalModels > 0 ? 
+                Math.max(...benchmarkData.map(model => model.maxScore)) : 0;
 
-            const statsHTML = `
+            document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${totalModels}</div>
-                    <div class="stat-label">AI Models</div>
+                    <div class="stat-label">Models</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${totalComics}</div>
-                    <div class="stat-label">Comics Tested</div>
+                    <div class="stat-label">Comics</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${avgScore}</div>
-                    <div class="stat-label">Average Score</div>
+                    <div class="stat-label">Avg Score</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">${bestScore}</div>
-                    <div class="stat-label">Highest Score</div>
+                    <div class="stat-number">${bestScore.toFixed(1)}</div>
+                    <div class="stat-label">Best Score</div>
                 </div>
             `;
-
-            document.getElementById('stats').innerHTML = statsHTML;
         }
 
         function populateTable() {
             const tbody = document.getElementById('leaderboard-body');
             
-            const rows = benchmarkData.map(model => `
+            tbody.innerHTML = benchmarkData.map(model => `
                 <tr>
                     <td class="rank">${getMedal(model.rank)} ${model.rank}</td>
                     <td class="model-name">
@@ -431,27 +636,22 @@
                     <td class="score ${getScoreClass(model.medianScore)}">${model.medianScore.toFixed(2)}</td>
                     <td class="score ${getScoreClass(model.maxScore)}">${model.maxScore.toFixed(1)}</td>
                     <td class="score ${getScoreClass(model.minScore)}">${model.minScore.toFixed(1)}</td>
-                    <td class="score">${model.totalComics}</td>
                 </tr>
             `).join('');
-
-            tbody.innerHTML = rows;
         }
 
         function updateLastUpdated() {
             const now = new Date();
-            const options = { 
+            document.getElementById('last-updated').textContent = now.toLocaleDateString('en-US', {
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
                 timeZoneName: 'short'
-            };
-            document.getElementById('last-updated').textContent = now.toLocaleDateString('en-US', options);
+            });
         }
 
-        // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             populateStats();
             populateTable();
