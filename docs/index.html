@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBF Comics AI Benchmark Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .leaderboard {
+            padding: 0 30px 30px;
+        }
+
+        .leaderboard h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .rank {
+            font-weight: 700;
+            color: #2c3e50;
+            width: 60px;
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 180px;
+        }
+
+        .score {
+            font-weight: 600;
+            text-align: center;
+            width: 80px;
+        }
+
+        .score.high { color: #27ae60; }
+        .score.medium { color: #f39c12; }
+        .score.low { color: #e74c3c; }
+
+        .medal {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .provider-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .anthropic { background: #e8f5e8; color: #2d5a2d; }
+        .google { background: #e3f2fd; color: #1565c0; }
+        .openai { background: #fff3e0; color: #e65100; }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .methodology {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+
+        .methodology h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .methodology p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 20px;
+            }
+            
+            .leaderboard {
+                padding: 0 15px 20px;
+            }
+            
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 PBF Comics AI Benchmark</h1>
+            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics as ground truth</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+
+        <div class="leaderboard">
+            <h2>🏆 Leaderboard</h2>
+            <div class="table-container">
+                <table id="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank">Rank</th>
+                            <th class="model-name">Model</th>
+                            <th class="score">Avg Score</th>
+                            <th class="score">Median</th>
+                            <th class="score">Best</th>
+                            <th class="score">Worst</th>
+                            <th class="score">Comics</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="methodology">
+            <h3>📊 Methodology</h3>
+            <p><strong>Dataset:</strong> 285 Perry Bible Fellowship comics with human-curated ground truth explanations</p>
+            <p><strong>Evaluation:</strong> AI explanations are scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), and clarity (10%)</p>
+            <p><strong>Scoring:</strong> Each criterion is rated 1-10, with the overall score being a weighted average</p>
+            <p><strong>Ground Truth:</strong> Created using candidate explanations from Claude-3.5-Sonnet, Gemini-2.0-Flash, and GPT-4o, then human-selected via web interface</p>
+        </div>
+
+        <div class="footer">
+            <p>📈 Last updated: <span id="last-updated"></span></p>
+            <p>🔗 <a href="https://github.com/yourusername/pbf-bench" target="_blank">View on GitHub</a> | 
+               📊 <a href="benchmark_results.csv" target="_blank">Download CSV</a> | 
+               📄 <a href="benchmark_details.json" target="_blank">Detailed Results</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Benchmark data - this would typically be loaded from the CSV or JSON
+        const benchmarkData = [
+  {
+    "model": "Gemini 2.0 Flash",
+    "model_id": "gemini-2.0-flash",
+    "provider": "google",
+    "version": "gemini-2.0-flash-exp",
+    "avgScore": 7.09228070175439,
+    "medianScore": 7.15,
+    "minScore": 3.3,
+    "maxScore": 9.4,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 1
+  },
+  {
+    "model": "Gpt 4o Mini",
+    "model_id": "gpt-4o-mini",
+    "provider": "openai",
+    "version": "gpt-4o-mini",
+    "avgScore": 7.085438596491224,
+    "medianScore": 7.5,
+    "minScore": 1.0,
+    "maxScore": 9.15,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 2
+  },
+  {
+    "model": "O3 Mini",
+    "model_id": "o3-mini",
+    "provider": "openai",
+    "version": "o3-mini-2025-01-31",
+    "avgScore": 7.083421052631574,
+    "medianScore": 7.5,
+    "minScore": 1.0,
+    "maxScore": 9.4,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 3
+  },
+  {
+    "model": "O4 Mini",
+    "model_id": "o4-mini",
+    "provider": "openai",
+    "version": "o4-mini-2025-04-16",
+    "avgScore": 7.049122807017543,
+    "medianScore": 7.65,
+    "minScore": 1.0,
+    "maxScore": 9.4,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 4
+  },
+  {
+    "model": "Gpt 4.1",
+    "model_id": "gpt-4.1",
+    "provider": "openai",
+    "version": "gpt-4.1-2025-04-14",
+    "avgScore": 7.039035087719296,
+    "medianScore": 7.5,
+    "minScore": 1.0,
+    "maxScore": 9.3,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 5
+  },
+  {
+    "model": "Gemini 2.5 Flash",
+    "model_id": "gemini-2.5-flash",
+    "provider": "google",
+    "version": "gemini-2.5-flash",
+    "avgScore": 6.998684210526315,
+    "medianScore": 7.15,
+    "minScore": 3.15,
+    "maxScore": 9.25,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 6
+  },
+  {
+    "model": "Gpt 4o",
+    "model_id": "gpt-4o",
+    "provider": "openai",
+    "version": "gpt-4o",
+    "avgScore": 6.995877192982457,
+    "medianScore": 7.35,
+    "minScore": 1.0,
+    "maxScore": 9.15,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 7
+  },
+  {
+    "model": "Claude 4 Sonnet",
+    "model_id": "claude-4-sonnet",
+    "provider": "anthropic",
+    "version": "claude-sonnet-4-20250514",
+    "avgScore": 3.740526315789472,
+    "medianScore": 3.5,
+    "minScore": 1.9,
+    "maxScore": 8.75,
+    "totalComics": 285,
+    "timestamp": "2025-06-25T09:16:27.319568",
+    "rank": 8
+  }
+];
+
+        function getScoreClass(score) {
+            if (score >= 7) return 'high';
+            if (score >= 5) return 'medium';
+            return 'low';
+        }
+
+        function getMedal(rank) {
+            switch(rank) {
+                case 1: return '🥇';
+                case 2: return '🥈';  
+                case 3: return '🥉';
+                default: return '';
+            }
+        }
+
+        function populateStats() {
+            const totalModels = benchmarkData.length;
+            const totalComics = benchmarkData[0].totalComics;
+            const avgScore = (benchmarkData.reduce((sum, model) => sum + model.avgScore, 0) / totalModels).toFixed(2);
+            const bestScore = Math.max(...benchmarkData.map(model => model.maxScore));
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalModels}</div>
+                    <div class="stat-label">AI Models</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalComics}</div>
+                    <div class="stat-label">Comics Tested</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${avgScore}</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${bestScore}</div>
+                    <div class="stat-label">Highest Score</div>
+                </div>
+            `;
+
+            document.getElementById('stats').innerHTML = statsHTML;
+        }
+
+        function populateTable() {
+            const tbody = document.getElementById('leaderboard-body');
+            
+            const rows = benchmarkData.map(model => `
+                <tr>
+                    <td class="rank">${getMedal(model.rank)} ${model.rank}</td>
+                    <td class="model-name">
+                        <div>${model.model}</div>
+                        <div class="provider-badge ${model.provider}">${model.provider}</div>
+                    </td>
+                    <td class="score ${getScoreClass(model.avgScore)}">${model.avgScore.toFixed(2)}</td>
+                    <td class="score ${getScoreClass(model.medianScore)}">${model.medianScore.toFixed(2)}</td>
+                    <td class="score ${getScoreClass(model.maxScore)}">${model.maxScore.toFixed(1)}</td>
+                    <td class="score ${getScoreClass(model.minScore)}">${model.minScore.toFixed(1)}</td>
+                    <td class="score">${model.totalComics}</td>
+                </tr>
+            `).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            };
+            document.getElementById('last-updated').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            populateStats();
+            populateTable();
+            updateLastUpdated();
+        });
+    </script>
+</body>
+</html>
