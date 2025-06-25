@@ -43,11 +43,3 @@ You can customize the leaderboard by:
 1. Editing the `generate_leaderboard.py` script to modify the styling or layout
 2. Updating the GitHub repository URL in the footer links
 3. Adding additional information or sections to the methodology
-
-## Features
-
-- 📱 Responsive design that works on mobile and desktop
-- 🏆 Interactive leaderboard with medal rankings
-- 📊 Statistics summary cards
-- 🎨 Color-coded scores (high/medium/low)
-- 🔗 Direct links to raw data (CSV and JSON)
