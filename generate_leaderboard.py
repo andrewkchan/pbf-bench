@@ -107,6 +107,19 @@ def create_leaderboard_html(models, comic_scores, metadata):
     # Convert models data to JSON for JavaScript
     models_json = json.dumps(models, indent=2)
     
+    # Load detailed results for modal display
+    detailed_results = {}
+    if os.path.exists('benchmark_details.json'):
+        with open('benchmark_details.json', 'r') as f:
+            benchmark_data = json.load(f)
+            for result in benchmark_data.get('detailed_results', []):
+                comic_id = result.get('comic_id')
+                if comic_id:
+                    detailed_results[comic_id] = result
+    
+    # Convert detailed results to JSON for JavaScript
+    detailed_results_json = json.dumps(detailed_results, indent=2)
+    
     total_comics = models[0]['totalComics'] if models else 0
     
     # Sort comics by filename
@@ -131,7 +144,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
             if score is not None:
                 scores_for_comic.append(score)
                 score_class = 'high' if score >= 7 else 'medium' if score >= 5 else 'low'
-                row_html += f'<td class="score {score_class}" data-score="{score}">{score:.1f}</td>'
+                row_html += f'<td class="score {score_class} clickable" data-score="{score}" data-comic="{comic_id}" data-model="{model["model_id"]}">{score:.1f}</td>'
             else:
                 row_html += '<td class="score" data-score="-1">-</td>'
         
@@ -284,6 +297,117 @@ def create_leaderboard_html(models, comic_scores, metadata):
             background: linear-gradient(135deg, #2980b9, #3498db) !important;
         }}
         
+        .clickable {{
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }}
+        
+        .clickable:hover {{
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }}
+        
+        /* Modal styles */
+        .modal {{
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }}
+        
+        .modal-content {{
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }}
+        
+        .modal-header {{
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+        }}
+        
+        .modal-header h3 {{
+            margin: 0;
+            font-size: 1.3rem;
+        }}
+        
+        .close {{
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }}
+        
+        .close:hover {{
+            opacity: 0.7;
+        }}
+        
+        .modal-body {{
+            padding: 20px;
+        }}
+        
+        .section {{
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }}
+        
+        .section h4 {{
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }}
+        
+        .section p {{
+            margin: 0;
+            line-height: 1.5;
+        }}
+        
+        .score-breakdown {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }}
+        
+        .score-item {{
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }}
+        
+        .score-item .label {{
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        
+        .score-item .value {{
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 3px;
+        }}
+        
         .rank {{ font-weight: 700; color: #2c3e50; width: 50px; }}
         .model-name {{ font-weight: 600; color: #2c3e50; min-width: 150px; }}
         .score {{ font-weight: 600; text-align: center; width: 60px; }}
@@ -389,8 +513,42 @@ def create_leaderboard_html(models, comic_scores, metadata):
         </div>
     </div>
 
+    <!-- Modal for detailed view -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h3 id="modalTitle">Model Response Details</h3>
+            </div>
+            <div class="modal-body">
+                <div class="section">
+                    <h4>📊 Score Breakdown</h4>
+                    <div class="score-breakdown" id="scoreBreakdown">
+                        <!-- Score items will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h4>🤖 Model Response</h4>
+                    <p id="modelResponse">Loading...</p>
+                </div>
+                
+                <div class="section">
+                    <h4>⚖️ Judge's Reasoning</h4>
+                    <p id="judgeReasoning">Loading...</p>
+                </div>
+                
+                <div class="section">
+                    <h4>✅ Ground Truth</h4>
+                    <p id="groundTruth">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const benchmarkData = {models_json};
+        const detailedResults = {detailed_results_json};
 
         function getScoreClass(score) {{
             if (score >= 7) return 'high';
@@ -470,7 +628,95 @@ def create_leaderboard_html(models, comic_scores, metadata):
             populateTable();
             updateLastUpdated();
             initializeSorting();
+            initializeModal();
         }});
+        
+        function initializeModal() {{
+            const modal = document.getElementById('detailModal');
+            const closeBtn = document.querySelector('.close');
+            
+            // Close modal when clicking X
+            closeBtn.onclick = function() {{
+                modal.style.display = 'none';
+            }}
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {{
+                if (event.target == modal) {{
+                    modal.style.display = 'none';
+                }}
+            }}
+            
+            // Add click handlers to score cells
+            document.addEventListener('click', function(event) {{
+                if (event.target.classList.contains('clickable')) {{
+                    const comicId = event.target.dataset.comic;
+                    const modelId = event.target.dataset.model;
+                    showDetailModal(comicId, modelId);
+                }}
+            }});
+        }}
+        
+        function showDetailModal(comicId, modelId) {{
+            const modal = document.getElementById('detailModal');
+            const result = detailedResults[comicId];
+            
+            if (!result) {{
+                alert('No detailed data available for this comic.');
+                return;
+            }}
+            
+            // Find model display name
+            const model = benchmarkData.find(m => m.model_id === modelId);
+            const modelName = model ? model.model : modelId;
+            
+            // Update modal title
+            const comicTitle = result.comic_title || comicId.replace('.png', '');
+            document.getElementById('modalTitle').textContent = `${{modelName}} - ${{comicTitle}}`;
+            
+            // Get explanation and scores for this model
+            const explanation = result.explanations[modelId] || 'No explanation available';
+            const scores = result.scores[modelId];
+            
+            // Update content
+            document.getElementById('modelResponse').textContent = explanation;
+            document.getElementById('groundTruth').textContent = result.ground_truth || 'No ground truth available';
+            
+            if (scores) {{
+                document.getElementById('judgeReasoning').textContent = scores.reasoning || 'No reasoning available';
+                
+                // Update score breakdown
+                const scoreBreakdown = document.getElementById('scoreBreakdown');
+                scoreBreakdown.innerHTML = `
+                    <div class="score-item">
+                        <div class="label">Overall</div>
+                        <div class="value">${{scores.overall_score.toFixed(1)}}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="label">Accuracy</div>
+                        <div class="value">${{scores.accuracy_score.toFixed(1)}}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="label">Completeness</div>
+                        <div class="value">${{scores.completeness_score.toFixed(1)}}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="label">Insight</div>
+                        <div class="value">${{scores.insight_score.toFixed(1)}}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="label">Clarity</div>
+                        <div class="value">${{scores.clarity_score.toFixed(1)}}</div>
+                    </div>
+                `;
+            }} else {{
+                document.getElementById('judgeReasoning').textContent = 'No scoring data available';
+                document.getElementById('scoreBreakdown').innerHTML = '<p>No scores available</p>';
+            }}
+            
+            // Show modal
+            modal.style.display = 'block';
+        }}
         
         function initializeSorting() {{
             const table = document.querySelector('.comic-table');
