@@ -44,12 +44,12 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
             display_name = model_name.replace('-', ' ').replace('_', ' ')
             display_name = ' '.join(word.capitalize() for word in display_name.split())
             
-            # Parse scores
+            # Parse scores from CSV summary (but we'll recalculate min/max)
             try:
                 avg_score = float(row['average_score'])
                 median_score = float(row['median_score'])
-                min_score = float(row['min_score'])
-                max_score = float(row['max_score'])
+                min_score_csv = float(row['min_score'])  # Keep for reference
+                max_score_csv = float(row['max_score'])  # Keep for reference
                 total_comics = int(row['total_comics'])
             except (ValueError, KeyError):
                 print(f"Warning: Invalid data for model {model_name}, skipping")
@@ -62,8 +62,8 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
                 'version': row.get('model_version', model_name),
                 'avgScore': avg_score,
                 'medianScore': median_score,
-                'minScore': min_score,
-                'maxScore': max_score,
+                'minScore': min_score_csv,  # Will recalculate later
+                'maxScore': max_score_csv,  # Will recalculate later
                 'totalComics': total_comics,
                 'timestamp': row.get('timestamp', '')
             })
@@ -79,6 +79,19 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
                     comic_scores[comic_id][model_name] = score
                 except (ValueError, TypeError):
                     comic_scores[comic_id][model_name] = None
+    
+    # Recalculate min/max based on actual displayed scores (handles duplicates consistently)
+    for model in models:
+        model_scores = []
+        for comic_id, scores in comic_scores.items():
+            if model['model_id'] in scores and scores[model['model_id']] is not None:
+                model_scores.append(scores[model['model_id']])
+        
+        if model_scores:
+            model['minScore'] = min(model_scores)
+            model['maxScore'] = max(model_scores)
+            # Also recalculate average to ensure consistency
+            model['avgScore'] = sum(model_scores) / len(model_scores)
     
     # Sort by average score (descending) and add ranks
     models.sort(key=lambda x: x['avgScore'], reverse=True)
@@ -108,6 +121,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
     models_json = json.dumps(models, indent=2)
     
     # Load detailed results for modal display
+    # Note: Use the last occurrence if there are duplicates (most recent/successful run)
     detailed_results = {}
     if os.path.exists('benchmark_details.json'):
         with open('benchmark_details.json', 'r') as f:
