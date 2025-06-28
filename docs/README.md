@@ -1,5 +1,7 @@
 # PBF Comics AI Benchmark
 
+[<img src="/docs/pbf-sample.png">](https://pbfcomics.com/comics/trunkle/)
+
 This repository contains the static leaderboard webpage and the source code to generate and evaluate the PBF Comics Benchmark. The goal of this benchmark is to evaluate AI model visual understanding and comic explanation using a dataset of 285 comics from Nicholas Gurewitch's Perry Bible Fellowship comics (https://pbfcomics.com/). These comics are interesting because:
 - They're **highly visual**, unlike other popular comics such as XKCD or Saturday Morning Breakfast Comics, which derive much humor from captions. Many comics in the series [do not have any words at all](https://pbfcomics.com/comics/trunkle/). 
 - There is **diversity of styles, entities, and situations** in the series. While the early PBF comics feature mostly human characters with a similar cartoony style, the series as a whole has a mix of [black-and-white](https://pbfcomics.com/comics/dinosaur-sheriff/), [watercolor](https://pbfcomics.com/comics/clear-boundaries/), [cartoon](https://pbfcomics.com/comics/the-shrink-ray/), and [realistic](https://pbfcomics.com/comics/carolyn-vert/) visual styles, [animal](https://pbfcomics.com/comics/the-last-unicorns/), [human](https://pbfcomics.com/comics/food-fight/), [anthropomorphic](https://pbfcomics.com/comics/shocked/), and [abstract](https://pbfcomics.com/comics/big-numbers/) characters.
