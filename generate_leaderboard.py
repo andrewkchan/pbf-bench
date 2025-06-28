@@ -422,6 +422,49 @@ def create_leaderboard_html(models, comic_scores, metadata):
             margin-top: 3px;
         }}
         
+        /* Markdown content styling */
+        .markdown-content {{
+            line-height: 1.6;
+            color: #333;
+        }}
+        
+        .markdown-content p {{
+            margin: 0 0 10px 0;
+        }}
+        
+        .markdown-content ul, .markdown-content ol {{
+            margin: 10px 0;
+            padding-left: 25px;
+        }}
+        
+        .markdown-content li {{
+            margin-bottom: 5px;
+        }}
+        
+        .markdown-content strong {{
+            color: #2c3e50;
+            font-weight: 600;
+        }}
+        
+        .markdown-content em {{
+            font-style: italic;
+        }}
+        
+        .markdown-content code {{
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }}
+        
+        .markdown-content blockquote {{
+            border-left: 3px solid #3498db;
+            padding-left: 15px;
+            margin: 10px 0;
+            color: #666;
+        }}
+        
         .rank {{ font-weight: 700; color: #2c3e50; width: 50px; }}
         .model-name {{ font-weight: 600; color: #2c3e50; min-width: 150px; }}
         .score {{ font-weight: 600; text-align: center; width: 60px; }}
@@ -444,13 +487,43 @@ def create_leaderboard_html(models, comic_scores, metadata):
         .openai {{ background: #fff3e0; color: #e65100; }}
         
         .methodology {{
-            padding: 20px;
+            padding: 30px;
             background: #f8f9fa;
             border-top: 1px solid #eee;
             font-size: 0.9rem;
+            line-height: 1.6;
         }}
-        .methodology h3 {{ color: #2c3e50; margin-bottom: 10px; }}
-        .methodology p {{ color: #666; margin-bottom: 8px; }}
+        .methodology h3 {{ 
+            color: #2c3e50; 
+            margin-bottom: 20px; 
+            font-size: 1.4rem;
+            text-align: center;
+        }}
+        .methodology h4 {{
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }}
+        .methodology p {{ 
+            color: #666; 
+            margin-bottom: 10px; 
+        }}
+        .methodology a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        .methodology a:hover {{
+            text-decoration: underline;
+        }}
+        .methodology ul, .methodology ol {{
+            margin: 10px 0;
+            padding-left: 20px;
+            color: #666;
+        }}
+        .methodology li {{
+            margin-bottom: 8px;
+        }}
         
         .footer {{
             background: #2c3e50;
@@ -472,7 +545,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
     <div class="container">
         <div class="header">
             <h1>🎨 PBF Comics AI Benchmark</h1>
-            <p>Evaluating AI models on comic explanation tasks using Perry Bible Fellowship comics</p>
+            <p>Evaluating AI models on visual understanding and comic explanation using 285 Perry Bible Fellowship comics</p>
         </div>
 
         <div class="stats" id="stats"></div>
@@ -514,10 +587,41 @@ def create_leaderboard_html(models, comic_scores, metadata):
         </div>
 
         <div class="methodology">
-            <h3>📊 Methodology</h3>
-            <p><strong>Dataset:</strong> {total_comics} Perry Bible Fellowship comics with human-curated ground truth explanations</p>
-            <p><strong>Evaluation:</strong> AI explanations scored by Claude-4-Opus on accuracy (40%), completeness (25%), insight (25%), clarity (10%)</p>
-            <p><strong>Scoring:</strong> Each criterion rated 1-10, with overall score as weighted average</p>
+            <h3>📊 About this Benchmark</h3>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="https://pbfcomics.com/comics/trunkle/" target="_blank">
+                    <img src="pbf-sample.png" alt="Sample PBF Comic" style="max-width: 400px; width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                </a>
+                <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">Example: "Trunkle" - A wordless comic requiring pure visual understanding</p>
+            </div>
+            
+            <p>The PBF Comics Benchmark evaluates AI models on {total_comics} comics from Nicholas Gurewitch's <a href="https://pbfcomics.com/" target="_blank">Perry Bible Fellowship</a>. These comics are ideal for testing visual understanding because:</p>
+            
+            <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                <li><strong>Highly visual:</strong> Unlike text-heavy comics (XKCD, SMBC), many PBF comics <a href="https://pbfcomics.com/comics/trunkle/" target="_blank">contain no words at all</a></li>
+                <li><strong>Diverse styles:</strong> Mix of <a href="https://pbfcomics.com/comics/dinosaur-sheriff/" target="_blank">black-and-white</a>, <a href="https://pbfcomics.com/comics/clear-boundaries/" target="_blank">watercolor</a>, <a href="https://pbfcomics.com/comics/the-shrink-ray/" target="_blank">cartoon</a>, and <a href="https://pbfcomics.com/comics/carolyn-vert/" target="_blank">realistic</a> art</li>
+                <li><strong>Complex themes:</strong> From <a href="https://pbfcomics.com/comics/mrs-hammer/" target="_blank">slapstick humor</a> to <a href="https://pbfcomics.com/comics/atlantis/" target="_blank">pop culture subversions</a></li>
+                <li><strong>Not memorized:</strong> Individual comics lack enough online discussion for models to memorize explanations</li>
+            </ul>
+            
+            <h4 style="margin-top: 20px; color: #2c3e50;">Ground Truth Creation</h4>
+            <p>Each comic received a human-curated explanation by:</p>
+            <ol style="margin: 10px 0; padding-left: 20px; color: #666;">
+                <li>Generating candidate explanations from GPT-4o, Claude 3.5 Sonnet, and Gemini 2.0 Flash</li>
+                <li>Human labeler selecting the best candidate or writing a custom explanation</li>
+                <li>Most labels received moderate to significant human modifications</li>
+            </ol>
+            
+            <h4 style="margin-top: 20px; color: #2c3e50;">Scoring Methodology</h4>
+            <p>Models explain each comic with: <em>"Explain this comic. Describe what's happening and explain the humor or message."</em></p>
+            <p><a href="https://arxiv.org/abs/2306.05685" target="_blank">Claude 4 Opus judges</a> each explanation on:</p>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                <li><strong>Accuracy (40%):</strong> Correctly identifies what's happening</li>
+                <li><strong>Completeness (25%):</strong> Covers all important visual elements</li>
+                <li><strong>Insight (25%):</strong> Understands the humor or message</li>
+                <li><strong>Clarity (10%):</strong> Well-written and easy to understand</li>
+            </ul>
         </div>
 
         <div class="footer">
@@ -525,6 +629,9 @@ def create_leaderboard_html(models, comic_scores, metadata):
             <p>🔗 <a href="https://github.com/andrewkchan/pbf-bench" target="_blank">View on GitHub</a></p>
         </div>
     </div>
+
+    <!-- Include marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Modal for detailed view -->
     <div id="detailModal" class="modal">
@@ -543,17 +650,17 @@ def create_leaderboard_html(models, comic_scores, metadata):
                 
                 <div class="section">
                     <h4>🤖 Model Response</h4>
-                    <p id="modelResponse">Loading...</p>
+                    <div id="modelResponse" class="markdown-content">Loading...</div>
                 </div>
                 
                 <div class="section">
                     <h4>⚖️ Judge's Reasoning</h4>
-                    <p id="judgeReasoning">Loading...</p>
+                    <div id="judgeReasoning" class="markdown-content">Loading...</div>
                 </div>
                 
                 <div class="section">
                     <h4>✅ Ground Truth</h4>
-                    <p id="groundTruth">Loading...</p>
+                    <div id="groundTruth" class="markdown-content">Loading...</div>
                 </div>
             </div>
         </div>
@@ -690,12 +797,12 @@ def create_leaderboard_html(models, comic_scores, metadata):
             const explanation = result.explanations[modelId] || 'No explanation available';
             const scores = result.scores[modelId];
             
-            // Update content
-            document.getElementById('modelResponse').textContent = explanation;
-            document.getElementById('groundTruth').textContent = result.ground_truth || 'No ground truth available';
+            // Update content with markdown rendering
+            document.getElementById('modelResponse').innerHTML = marked.parse(explanation);
+            document.getElementById('groundTruth').innerHTML = marked.parse(result.ground_truth || 'No ground truth available');
             
             if (scores) {{
-                document.getElementById('judgeReasoning').textContent = scores.reasoning || 'No reasoning available';
+                document.getElementById('judgeReasoning').innerHTML = marked.parse(scores.reasoning || 'No reasoning available');
                 
                 // Update score breakdown
                 const scoreBreakdown = document.getElementById('scoreBreakdown');
@@ -722,7 +829,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
                     </div>
                 `;
             }} else {{
-                document.getElementById('judgeReasoning').textContent = 'No scoring data available';
+                document.getElementById('judgeReasoning').innerHTML = marked.parse('No scoring data available');
                 document.getElementById('scoreBreakdown').innerHTML = '<p>No scores available</p>';
             }}
             
