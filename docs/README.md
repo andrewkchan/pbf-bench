@@ -1,5 +1,3 @@
-# PBF Comics AI Benchmark
-
 [<img src="/docs/pbf-sample.png">](https://pbfcomics.com/comics/trunkle/)
 
 This repository contains the static leaderboard webpage and the source code to generate and evaluate the PBF Comics Benchmark. The goal of this benchmark is to evaluate AI model visual understanding and comic explanation using a dataset of 285 comics from Nicholas Gurewitch's Perry Bible Fellowship comics (https://pbfcomics.com/). These comics are interesting because:
