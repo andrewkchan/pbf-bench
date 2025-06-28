@@ -204,11 +204,42 @@ def create_leaderboard_html(models, comic_scores, metadata):
         .header {{
             background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
-            padding: 30px 20px;
+            padding: 25px 20px;
             text-align: center;
         }}
-        .header h1 {{ font-size: 2rem; margin-bottom: 10px; font-weight: 700; }}
-        .header p {{ font-size: 1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }}
+        .header h1 {{ font-size: 2rem; margin: 0; font-weight: 700; }}
+        
+        /* Intro section */
+        .about-section {{
+            padding: 30px;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            line-height: 1.6;
+        }}
+        
+        .about-section p {{
+            color: #666;
+            margin-bottom: 10px;
+            text-align: left;
+            max-width: 700px;
+        }}
+        
+        .about-section ul {{
+            max-width: 700px;
+            margin: 20px auto;
+            text-align: left;
+        }}
+        
+        .about-section a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        
+        .about-section a:hover {{
+            text-decoration: underline;
+        }}
         
         /* Compact stats */
         .stats {{
@@ -544,8 +575,8 @@ def create_leaderboard_html(models, comic_scores, metadata):
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎨 PBF Comics AI Benchmark</h1>
-            <p>Evaluating AI models on visual understanding and comic explanation using 285 Perry Bible Fellowship comics</p>
+            <h1>🎨 PBF-Bench</h1>
+            <b>Evaluating AI Models on Visual Understanding and Comic Explanations</b>
         </div>
 
         <div class="stats" id="stats"></div>
@@ -586,24 +617,27 @@ def create_leaderboard_html(models, comic_scores, metadata):
             </div>
         </div>
 
-        <div class="methodology">
-            <h3>📊 About this Benchmark</h3>
-            
-            <div style="text-align: center; margin: 20px 0;">
+        <div class="about-section">
+            <div style="text-align: center; margin-right: auto; margin-left: auto; margin-bottom: 30px;">
                 <a href="https://pbfcomics.com/comics/trunkle/" target="_blank">
-                    <img src="pbf-sample.png" alt="Sample PBF Comic" style="max-width: 400px; width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="pbf-sample.png" alt="Sample PBF Comic" style="max-width: 600px; width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 </a>
-                <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">Example: "Trunkle" - A wordless comic requiring pure visual understanding</p>
+                <p style="font-size: 0.85rem; color: #666; margin-top: 8px; text-align: center; margin-left: auto; margin-right: auto;">Example: "Trunkle" - A wordless comic requiring pure visual understanding</p>
             </div>
             
-            <p>The PBF Comics Benchmark evaluates AI models on {total_comics} comics from Nicholas Gurewitch's <a href="https://pbfcomics.com/" target="_blank">Perry Bible Fellowship</a>. These comics are ideal for testing visual understanding because:</p>
-            
-            <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
-                <li><strong>Highly visual:</strong> Unlike text-heavy comics (XKCD, SMBC), many PBF comics <a href="https://pbfcomics.com/comics/trunkle/" target="_blank">contain no words at all</a></li>
-                <li><strong>Diverse styles:</strong> Mix of <a href="https://pbfcomics.com/comics/dinosaur-sheriff/" target="_blank">black-and-white</a>, <a href="https://pbfcomics.com/comics/clear-boundaries/" target="_blank">watercolor</a>, <a href="https://pbfcomics.com/comics/the-shrink-ray/" target="_blank">cartoon</a>, and <a href="https://pbfcomics.com/comics/carolyn-vert/" target="_blank">realistic</a> art</li>
-                <li><strong>Complex themes:</strong> From <a href="https://pbfcomics.com/comics/mrs-hammer/" target="_blank">slapstick humor</a> to <a href="https://pbfcomics.com/comics/atlantis/" target="_blank">pop culture subversions</a></li>
-                <li><strong>Not memorized:</strong> Individual comics lack enough online discussion for models to memorize explanations</li>
-            </ul>
+            <div>
+                <p>The PBF Comics Benchmark evaluates AI models on {total_comics} comics from Nicholas Gurewitch's <a href="https://pbfcomics.com/" target="_blank">Perry Bible Fellowship</a>. These comics are ideal for testing visual understanding because:</p>
+                <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                    <li><strong>Highly visual:</strong> Unlike text-heavy comics (XKCD, SMBC), many PBF comics <a href="https://pbfcomics.com/comics/trunkle/" target="_blank">contain no words at all</a></li>
+                    <li><strong>Diverse styles:</strong> Mix of <a href="https://pbfcomics.com/comics/dinosaur-sheriff/" target="_blank">black-and-white</a>, <a href="https://pbfcomics.com/comics/clear-boundaries/" target="_blank">watercolor</a>, <a href="https://pbfcomics.com/comics/the-shrink-ray/" target="_blank">cartoon</a>, and <a href="https://pbfcomics.com/comics/carolyn-vert/" target="_blank">realistic</a> art</li>
+                    <li><strong>Complex themes:</strong> From <a href="https://pbfcomics.com/comics/mrs-hammer/" target="_blank">slapstick humor</a> to <a href="https://pbfcomics.com/comics/atlantis/" target="_blank">pop culture subversions</a></li>
+                    <li><strong>Not memorized:</strong> Individual comics lack enough online discussion for models to memorize explanations</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="methodology">
+            <h3>📊 Methodology</h3>
             
             <h4 style="margin-top: 20px; color: #2c3e50;">Ground Truth Creation</h4>
             <p>Each comic received a human-curated explanation by:</p>
