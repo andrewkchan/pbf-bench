@@ -324,13 +324,100 @@ class OpenAIProvider(ModelProvider):
                 error=str(e)
             )
 
+class XAIProvider(ModelProvider):
+    """Provider for xAI Grok models"""
+    def __init__(self, config: Dict[str, Any]):
+        super().__init__(config)
+        try:
+            from xai_sdk import Client
+            logger.info("xAI SDK imported successfully")
+            # Initialize with explicit parameters only
+            self.client = Client(
+                api_host="api.x.ai",
+                api_key=self.api_key
+            )
+            logger.info("✅ xAI client initialized successfully")
+        except ImportError:
+            raise ImportError("Please install xai-sdk: pip install xai-sdk")
+        except Exception as e:
+            logger.error(f"Failed to initialize xAI client: {e}")
+            raise
+    
+    async def generate(self, prompt: str, image_path: str) -> ModelResponse:
+        start_time = time.time()
+        timestamp = datetime.utcnow().isoformat()
+        
+        try:
+            # Convert GIF to PNG if needed for consistency
+            compatible_path = self._ensure_compatible_format(image_path)
+            
+            # Encode image to base64
+            image_data = self.encode_image(compatible_path)
+            
+            # Determine media type
+            if compatible_path.lower().endswith('.png'):
+                media_type = "image/png"
+            elif compatible_path.lower().endswith('.jpg') or compatible_path.lower().endswith('.jpeg'):
+                media_type = "image/jpeg"
+            else:
+                media_type = "image/png"  # Default to PNG
+            
+            # Create data URL
+            data_url = f"data:{media_type};base64,{image_data}"
+            
+            # Create chat with the model
+            from xai_sdk.chat import image, user
+            chat = self.client.chat.create(
+                model=self.config['model'],
+                temperature=self.config['temperature']
+            )
+            
+            # Create message with image and text content
+            # The user function accepts multiple content arguments
+            chat.append(user(image(data_url, detail="high"), prompt))
+            
+            # Sample the response
+            # The sample method doesn't take max_len directly
+            response = chat.sample()
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            # Extract token usage if available
+            usage = {}
+            if hasattr(response, 'usage'):
+                usage = {
+                    'input_tokens': getattr(response.usage, 'prompt_tokens', 0),
+                    'output_tokens': getattr(response.usage, 'completion_tokens', 0),
+                    'total_tokens': getattr(response.usage, 'total_tokens', 0)
+                }
+            
+            return ModelResponse(
+                model_id=self.config['model'],
+                text=response.content,
+                usage=usage,
+                latency_ms=latency_ms,
+                timestamp=timestamp
+            )
+            
+        except Exception as e:
+            logger.error(f"Error with xAI API: {e}")
+            return ModelResponse(
+                model_id=self.config['model'],
+                text="",
+                usage={},
+                latency_ms=(time.time() - start_time) * 1000,
+                timestamp=timestamp,
+                error=str(e)
+            )
+
 class ModelRunner:
     """Main class for running models with rate limiting and retries"""
     
     PROVIDER_CLASSES = {
         'anthropic': AnthropicProvider,
         'google': GoogleProvider,
-        'openai': OpenAIProvider
+        'openai': OpenAIProvider,
+        'xai': XAIProvider
     }
     
     def __init__(self, config_path: str = "models_config.yaml"):

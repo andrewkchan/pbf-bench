@@ -37,3 +37,9 @@ git add docs/index.html
 git commit -m "Update leaderboard with latest results"
 git push
 ```
+
+To run and update for just a subset of models, use the `--models` argument:
+
+```bash
+python run_benchmark.py --models gemini-2.5-flash
+```
