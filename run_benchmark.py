@@ -32,7 +32,8 @@ class BenchmarkRunner:
                  ai_explanations_file: str = "ai_explanations.json",
                  comics_metadata_file: str = "pbf_comics_metadata.json",
                  results_csv: str = "benchmark_results.csv",
-                 details_json: str = "benchmark_details.json"):
+                 details_json: str = "benchmark_details.json",
+                 save_mode: str = "auto"):
         """Initialize benchmark runner"""
         self.config_path = config_path
         self.ground_truth_file = ground_truth_file
@@ -40,6 +41,7 @@ class BenchmarkRunner:
         self.comics_metadata_file = comics_metadata_file
         self.results_csv = results_csv
         self.details_json = details_json
+        self.save_mode = save_mode
         
         # Initialize components
         self.runner = ModelRunner(config_path)
@@ -221,7 +223,7 @@ class BenchmarkRunner:
         }
         
         # Save results
-        self._save_results(benchmark_results)
+        self._save_results(benchmark_results, mode=self.save_mode)
         
         return benchmark_results
     
@@ -279,18 +281,175 @@ class BenchmarkRunner:
         
         return summary
     
-    def _save_results(self, benchmark_results: Dict):
-        """Save results to CSV and JSON files"""
-        # Save detailed JSON
+    def _merge_and_save_results(self, new_results: Dict):
+        """Merge new results with existing results and save"""
+        # Load existing results
+        with open(self.details_json, 'r') as f:
+            old_data = json.load(f)
+        
+        # Merge detailed results
+        old_results_map = {}
+        for result in old_data.get('detailed_results', []):
+            comic_id = result['comic_id']
+            if comic_id not in old_results_map:
+                old_results_map[comic_id] = result
+            else:
+                # Merge if there are multiple entries for the same comic
+                old_results_map[comic_id]['explanations'].update(result['explanations'])
+                old_results_map[comic_id]['scores'].update(result['scores'])
+        
+        # Update with new results
+        new_models = set(new_results['metadata']['models'])
+        for result in new_results['detailed_results']:
+            comic_id = result['comic_id']
+            
+            if comic_id in old_results_map:
+                # Merge with existing comic entry
+                old_results_map[comic_id]['explanations'].update(result['explanations'])
+                old_results_map[comic_id]['scores'].update(result['scores'])
+            else:
+                # Add new comic entry
+                old_results_map[comic_id] = result
+        
+        # Create merged data structure
+        merged_data = {
+            'metadata': new_results['metadata'],  # Use latest metadata
+            'detailed_results': sorted(old_results_map.values(), key=lambda x: x['comic_id'])
+        }
+        
+        # Recalculate summary for all models
+        all_models = set()
+        for result in merged_data['detailed_results']:
+            all_models.update(result.get('explanations', {}).keys())
+        
+        merged_data['summary'] = self._calculate_summary_stats(
+            merged_data['detailed_results'], 
+            sorted(all_models)
+        )
+        merged_data['metadata']['models'] = sorted(all_models)
+        
+        # Save merged JSON
         with open(self.details_json, 'w') as f:
-            json.dump(benchmark_results, f, indent=2)
+            json.dump(merged_data, f, indent=2)
         
-        logger.info(f"Detailed results saved to {self.details_json}")
+        logger.info(f"Merged detailed results saved to {self.details_json}")
+        logger.info(f"Updated models: {', '.join(sorted(new_models))}")
         
-        # Save CSV summary
-        self._save_csv_summary(benchmark_results)
+        # Save merged CSV
+        self._save_merged_csv(merged_data, new_models)
+    
+    def _save_merged_csv(self, merged_results: Dict, new_models: set):
+        """Save merged results to CSV"""
+        # Load existing CSV if it exists
+        existing_rows = {}
+        existing_fieldnames = []
         
-        logger.info(f"CSV results saved to {self.results_csv}")
+        if os.path.exists(self.results_csv):
+            with open(self.results_csv, 'r') as f:
+                reader = csv.DictReader(f)
+                existing_fieldnames = list(reader.fieldnames) if reader.fieldnames else []
+                for row in reader:
+                    existing_rows[row['model_name']] = row
+        
+        # Generate rows for all models
+        all_models = merged_results['metadata']['models']
+        detailed_results = merged_results['detailed_results']
+        
+        # Determine all fieldnames needed
+        all_fieldnames = ['model_name', 'model_version', 'timestamp']
+        
+        # Add all comic columns
+        comic_ids = sorted(set(r['comic_id'] for r in detailed_results))
+        for comic_id in comic_ids:
+            field = f'comic_{comic_id}'
+            if field not in all_fieldnames:
+                all_fieldnames.append(field)
+        
+        # Add summary columns
+        summary_fields = ['average_score', 'median_score', 'min_score', 'max_score', 'total_comics']
+        all_fieldnames.extend(summary_fields)
+        
+        # Create rows for all models
+        csv_data = []
+        for model in all_models:
+            # Start with existing row if available
+            row = existing_rows.get(model, {})
+            
+            # Update basic info
+            row['model_name'] = model
+            row['model_version'] = self.config['models'].get(model, {}).get('model', 'unknown')
+            
+            # Update timestamp only for new/updated models
+            if model in new_models:
+                row['timestamp'] = merged_results['metadata']['timestamp']
+            elif 'timestamp' not in row:
+                row['timestamp'] = merged_results['metadata']['timestamp']
+            
+            # Update per-comic scores
+            for result in detailed_results:
+                comic_id = result['comic_id']
+                field = f'comic_{comic_id}'
+                if model in result.get('scores', {}):
+                    score = result['scores'][model]['overall_score']
+                    row[field] = score
+                elif field not in row:
+                    row[field] = ''  # Leave empty rather than ERROR for missing comics
+            
+            # Update summary statistics
+            if model in merged_results['summary']:
+                stats = merged_results['summary'][model]
+                if 'overall' in stats:
+                    row['average_score'] = stats['overall']['mean']
+                    row['median_score'] = stats['overall']['median']
+                    row['min_score'] = stats['overall']['min']
+                    row['max_score'] = stats['overall']['max']
+                    row['total_comics'] = stats['count']
+            
+            # Ensure all fields exist
+            for field in all_fieldnames:
+                if field not in row:
+                    row[field] = ''
+            
+            csv_data.append(row)
+        
+        # Write CSV
+        if csv_data:
+            with open(self.results_csv, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=all_fieldnames)
+                writer.writeheader()
+                writer.writerows(csv_data)
+        
+        logger.info(f"Merged CSV results saved to {self.results_csv}")
+    
+    def _save_results(self, benchmark_results: Dict, mode: str = 'auto'):
+        """Save results to CSV and JSON files
+        
+        Args:
+            benchmark_results: The benchmark results to save
+            mode: 'overwrite', 'merge', or 'auto' (auto-detect based on models)
+        """
+        # Determine if we should merge based on whether we're running a subset of models
+        all_benchmark_models = set(self.config.get('benchmark_models', []))
+        current_models = set(benchmark_results['metadata']['models'])
+        
+        should_merge = (mode == 'merge' or 
+                       (mode == 'auto' and current_models < all_benchmark_models))
+        
+        if should_merge and os.path.exists(self.details_json):
+            logger.info("Running in merge mode - updating existing results")
+            self._merge_and_save_results(benchmark_results)
+        else:
+            logger.info("Running in overwrite mode - replacing existing results")
+            # Save detailed JSON
+            with open(self.details_json, 'w') as f:
+                json.dump(benchmark_results, f, indent=2)
+            
+            logger.info(f"Detailed results saved to {self.details_json}")
+            
+            # Save CSV summary
+            self._save_csv_summary(benchmark_results)
+            
+            logger.info(f"CSV results saved to {self.results_csv}")
     
     def _save_csv_summary(self, benchmark_results: Dict):
         """Save summary results to CSV"""
@@ -350,6 +509,8 @@ async def main():
     parser.add_argument('--ai-explanations', default='ai_explanations.json', help='AI explanations file')
     parser.add_argument('--output-csv', default='benchmark_results.csv', help='Output CSV file')
     parser.add_argument('--output-json', default='benchmark_details.json', help='Output JSON file')
+    parser.add_argument('--save-mode', choices=['auto', 'merge', 'overwrite'], default='auto',
+                        help='How to save results: auto (merge if subset), merge (always merge), overwrite (replace)')
     
     args = parser.parse_args()
     
@@ -358,7 +519,8 @@ async def main():
             ground_truth_file=args.ground_truth,
             ai_explanations_file=args.ai_explanations,
             results_csv=args.output_csv,
-            details_json=args.output_json
+            details_json=args.output_json,
+            save_mode=args.save_mode
         )
         
         results = await runner.run_benchmark(

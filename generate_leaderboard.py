@@ -37,6 +37,8 @@ def load_benchmark_data(csv_file="benchmark_results.csv"):
                 provider = 'google'
             elif model_name.startswith(('gpt', 'o3', 'o4')):
                 provider = 'openai'
+            elif model_name.startswith('grok'):
+                provider = 'xai'
             else:
                 provider = 'unknown'
             
@@ -516,6 +518,7 @@ def create_leaderboard_html(models, comic_scores, metadata):
         .anthropic {{ background: #e8f5e8; color: #2d5a2d; }}
         .google {{ background: #e3f2fd; color: #1565c0; }}
         .openai {{ background: #fff3e0; color: #e65100; }}
+        .xai {{ background: #f3e5f5; color: #6a1b9a; }}
         
         .methodology {{
             padding: 30px;
