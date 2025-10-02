@@ -8,15 +8,14 @@ import json
 import csv
 import asyncio
 import argparse
-from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-from model_runner import ModelRunner, ModelResponse
-from judge import ComicExplanationJudge, JudgeScore
+from model_runner import ModelRunner
+from judge import ComicExplanationJudge
 
 # Load environment variables
 load_dotenv()
@@ -32,8 +31,7 @@ class BenchmarkRunner:
                  ai_explanations_file: str = "ai_explanations.json",
                  comics_metadata_file: str = "pbf_comics_metadata.json",
                  results_csv: str = "benchmark_results.csv",
-                 details_json: str = "benchmark_details.json",
-                 save_mode: str = "auto"):
+                 details_json: str = "benchmark_details.json"):
         """Initialize benchmark runner"""
         self.config_path = config_path
         self.ground_truth_file = ground_truth_file
@@ -41,7 +39,6 @@ class BenchmarkRunner:
         self.comics_metadata_file = comics_metadata_file
         self.results_csv = results_csv
         self.details_json = details_json
-        self.save_mode = save_mode
         
         # Initialize components
         self.runner = ModelRunner(config_path)
@@ -223,7 +220,7 @@ class BenchmarkRunner:
         }
         
         # Save results
-        self._save_results(benchmark_results, mode=self.save_mode)
+        self._save_results(benchmark_results)
         
         return benchmark_results
     
@@ -421,34 +418,20 @@ class BenchmarkRunner:
         
         logger.info(f"Merged CSV results saved to {self.results_csv}")
     
-    def _save_results(self, benchmark_results: Dict, mode: str = 'auto'):
-        """Save results to CSV and JSON files
-        
-        Args:
-            benchmark_results: The benchmark results to save
-            mode: 'overwrite', 'merge', or 'auto' (auto-detect based on models)
-        """
-        # Determine if we should merge based on whether we're running a subset of models
-        all_benchmark_models = set(self.config.get('benchmark_models', []))
-        current_models = set(benchmark_results['metadata']['models'])
-        
-        should_merge = (mode == 'merge' or 
-                       (mode == 'auto' and current_models < all_benchmark_models))
-        
-        if should_merge and os.path.exists(self.details_json):
+    def _save_results(self, benchmark_results: Dict):
+        """Save results to CSV and JSON files"""
+        if os.path.exists(self.details_json):
             logger.info("Running in merge mode - updating existing results")
             self._merge_and_save_results(benchmark_results)
         else:
-            logger.info("Running in overwrite mode - replacing existing results")
-            # Save detailed JSON
+            logger.info("No existing results found - creating new results file")
             with open(self.details_json, 'w') as f:
                 json.dump(benchmark_results, f, indent=2)
-            
+
             logger.info(f"Detailed results saved to {self.details_json}")
-            
-            # Save CSV summary
+
             self._save_csv_summary(benchmark_results)
-            
+
             logger.info(f"CSV results saved to {self.results_csv}")
     
     def _save_csv_summary(self, benchmark_results: Dict):
@@ -509,9 +492,6 @@ async def main():
     parser.add_argument('--ai-explanations', default='ai_explanations.json', help='AI explanations file')
     parser.add_argument('--output-csv', default='benchmark_results.csv', help='Output CSV file')
     parser.add_argument('--output-json', default='benchmark_details.json', help='Output JSON file')
-    parser.add_argument('--save-mode', choices=['auto', 'merge', 'overwrite'], default='auto',
-                        help='How to save results: auto (merge if subset), merge (always merge), overwrite (replace)')
-    
     args = parser.parse_args()
     
     try:
@@ -519,8 +499,7 @@ async def main():
             ground_truth_file=args.ground_truth,
             ai_explanations_file=args.ai_explanations,
             results_csv=args.output_csv,
-            details_json=args.output_json,
-            save_mode=args.save_mode
+            details_json=args.output_json
         )
         
         results = await runner.run_benchmark(
